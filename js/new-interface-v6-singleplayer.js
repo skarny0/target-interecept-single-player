@@ -545,6 +545,9 @@ const player = {
     score:0
 };
 
+let humanImg = new Image();
+humanImg.src = './images/human-head-small.png'; // Path to your robot head image
+
 const camera = {
     x: world.width / 2,
     y: world.height / 2,
@@ -1638,7 +1641,18 @@ function drawPlayer() {
 
     ctx.fillStyle = player.color;
     ctx.fillRect(topLeftX, topLeftY, player.width, player.height);
+
+    ctx.drawImage(humanImg, topLeftX, topLeftY, 50, 50);
 }
+
+
+// function drawPlayer() {
+//     let topLeftX = player.x - player.width / 2;
+//     let topLeftY = player.y - player.height / 2;
+
+//     ctx.fillStyle = player.color;
+//     ctx.fillRect(topLeftX, topLeftY, player.width, player.height);
+// }
 
 // MS5
 function drawAIPlayer() {
