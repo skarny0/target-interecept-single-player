@@ -44,7 +44,7 @@ This file should contain static experimental metadata such as:
 var EXPERIMENT_SUMMARY = `
     This experiment tests how people plan and act in quickly changing enviornments. 
     To test this, we built an arcade-like videogame where your goal is to intercept targets that are moving in a 2D space. 
-    Your goal will be to maximize your score in the limited time alotted in each round. - You have an AI collaborative player that will help you with the task.
+    Your goal will be to maximize your score in the limited time alotted in each round.
 `;
 
 /*
