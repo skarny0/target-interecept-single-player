@@ -639,7 +639,7 @@ if (noAssignment){
         await initExperimentSettings();
         // curSeeds = [12,123,12345,123456, 1234566, 1234567];
         // // settings.maxTargets=100;
-        // currentCondition = 1;
+        // currentCondition = 3; 
         console.log('assignedCondition:', currentCondition); // Add this line
         console.log('assignedSeed:', curSeeds); // Add this line
     } else {
