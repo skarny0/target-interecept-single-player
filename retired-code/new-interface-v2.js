@@ -16,26 +16,37 @@ $("#full-game-container").attr("hidden", false);
 $("#survey-workload-container").attr("hidden", true);
 $("#survey-full-container").attr("hidden", true);
 $("#complete-page-content-container").attr("hidden", true);
+$("#ai-comparison-container").attr("hidden", true);
 
 // //****************************************** FIREBASE FUNCTIONALITY **********************************************//
 
 // Importing functions and variables from the FirebasePsych library
 import { writeRealtimeDatabase,writeURLParameters,readRealtimeDatabase,
     blockRandomization,finalizeBlockRandomization,
-    initializeRealtimeDatabase,initializeSecondRealtimeDatabase } from "./firebasepsych1.1.js";
+    initializeRealtimeDatabase,initializeSecondRealtimeDatabase } from "../js/firebasepsych1.1.js";
 
 // Define the configuration file for first database
 
-const firebaseConfig_db1 = {
-    apiKey: "AIzaSyAZKFzh1o0fytvilXTs3sJu_AfvFfAZDGk",
-    authDomain: "uci-hri-exp2.firebaseapp.com",
-    databaseURL: "https://uci-hri-exp2-default-rtdb.firebaseio.com",
-    projectId: "uci-hri-exp2",
-    storageBucket: "uci-hri-exp2.appspot.com",
-    messagingSenderId: "1074930278032",
-    appId: "1:1074930278032:web:34a303f487af2cd82f4215"
-  };
+// const firebaseConfig_db1 = {
+//     apiKey: "AIzaSyAZKFzh1o0fytvilXTs3sJu_AfvFfAZDGk",
+//     authDomain: "uci-hri-exp2.firebaseapp.com",
+//     databaseURL: "https://uci-hri-exp2-default-rtdb.firebaseio.com",
+//     projectId: "uci-hri-exp2",
+//     storageBucket: "uci-hri-exp2.appspot.com",
+//     messagingSenderId: "1074930278032",
+//     appId: "1:1074930278032:web:34a303f487af2cd82f4215"
+// };
 
+const firebaseConfig_db1 = {
+    apiKey: "AIzaSyDcc2RhAdA6I95EYqWpxJ69h8j4OawjzH4",
+    authDomain: "collab-ai-f09f1.firebaseapp.com",
+    databaseURL: "https://collab-ai-f09f1-default-rtdb.firebaseio.com",
+    projectId: "collab-ai-f09f1",
+    storageBucket: "collab-ai-f09f1.appspot.com",
+    messagingSenderId: "756574854064",
+    appId: "1:756574854064:web:133da37f9203a849161475"
+  };
+  
 // Get the reference to the two databases using the configuration files
 const [ db1 , firebaseUserId1 ] = await initializeRealtimeDatabase( firebaseConfig_db1 );
 // const [ db2 , firebaseUserId2 ] = await initializeSecondRealtimeDatabase( firebaseConfig_db2 );
@@ -55,9 +66,9 @@ var STATICOBJDEBUG = false; // Set to true to use static object locations for de
 let studyId = 'placeHolder';
 
 if (DEBUG){
-   studyId    = "uci-hri-experiment-drt8-debug";
+   studyId    = "uci-hri-experiment-collab2-debug";
 } else {
-    studyId   = "uci-hri-experiment-drt8";
+    studyId   = "uci-hri-experiment-collab2";
 }
 
 // WRITE PROLIFIC PARTICIPANT DATA TO DB1
@@ -74,6 +85,9 @@ function writeGameDatabase(){
 
     if (DEBUG) console.log("Writing to database from block", currentBlock, "round", currentRound);
 
+    let path12  = studyId + '/participantData/' + firebaseUserId1 + '/condition' + '/blockCondition';
+    let path13  = studyId + '/participantData/' + firebaseUserId1 + '/condition' + '/seedCondition';
+
     // console.log("Writing to database");
     let path1   = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/spawnData';
     let path2   = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/caughtTargets';
@@ -82,16 +96,23 @@ function writeGameDatabase(){
     let path5   = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/playerLocation';
     let path6   = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/settings';
     let path7   = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/roundTime';
+    let path11  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/playerScore';
+ 
+    // let path14  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIClicks_Adjusted';
     let path8   = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIcaughtTargets';
     let path9   = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIClicks';
     let path10  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/aiScore';
-    let path11  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/playerScore';
-    let path12  = studyId + '/participantData/' + firebaseUserId1 + '/condition' + '/blockCondition';
-    let path13  = studyId + '/participantData/' + firebaseUserId1 + '/condition' + '/seedCondition';
-    let path14  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIClicks_Adjusted';
-    let path15  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/DRTresponses';
-    let path16  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/DRTfalseAlarm';
     let path17  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIeventStream';
+
+    let path18  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIcaughtTargets_offline';
+    let path19  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIClicks_offline';
+    let path20 = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/aiScore_offline';
+    // let path20  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIClicks_Adjusted_offline';
+    // let path21  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIplayerLocation_offline';
+    // let path22  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIplayerLocation';
+    let path23  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIeventStream_offline';
+
+    
 
     writeRealtimeDatabase(db1, path1, spawnData);
     writeRealtimeDatabase(db1, path2, caughtTargets);
@@ -106,10 +127,16 @@ function writeGameDatabase(){
     writeRealtimeDatabase(db1, path11, score);
     writeRealtimeDatabase(db1, path12, currentCondition);
     writeRealtimeDatabase(db1, path13, curSeeds);
-    writeRealtimeDatabase(db1, path14, aiClicks_adjusted);
-    writeRealtimeDatabase(db1, path15, drtResponses);
-    writeRealtimeDatabase(db1, path16, drtFalseAlarm);
+    // writeRealtimeDatabase(db1, path14, aiClicks_adjusted);
+    // writeRealtimeDatabase(db1, path15, drtResponses);
+    // writeRealtimeDatabase(db1, path16, drtFalseAlarm);
     writeRealtimeDatabase(db1, path17, AIeventStream);
+    writeRealtimeDatabase(db1, path18, AIcaughtTargets_offline);
+    writeRealtimeDatabase(db1, path19, aiClicks_offline);
+    writeRealtimeDatabase(db1, path20, aiScore_offline);
+    // writeRealtimeDatabase(db1, path21, AIplayerLocation_offline);
+    // writeRealtimeDatabase(db1, path22, AIplayerLocation);
+    writeRealtimeDatabase(db1, path23, AIeventStream_offline);
 }
 
 //************************************************ ENVIRONMENT INITIALIZATION ********************************************//
@@ -119,7 +146,7 @@ const scoreCanvas = document.getElementById('scoreCanvas');
 const scoreCtx = scoreCanvas.getContext('2d');
 const world = { width: 800, height: 800 };
 const center = { x: canvas.width / 2, y: canvas.height / 2 };
-let observableRadius = 370; // Radius for positioning objects
+let observableRadius = 390; // Radius for positioning objects
 
 let roundSettings = {};
 
@@ -158,17 +185,18 @@ function getDifficultySettingsFromURL() {
 }
 
 let settings = {
-    maxSeconds: 180,            // maximum number of seconds per round --> 3 minutes
-    AIMode:1,                   // MS4: 0=no assistance; 1=always on; 2=adaptive
-    AICollab: 0,                // MS4: 0=ignorant; 1=intentional; 2=cognitive model
-    alpha: 0.9,                 // MS8: discounting parameter for AI planner
-    AIDisplayMode: 1,           // MS4: 0=show movement path; 1=show where to click; 2=show which targets to intercept
-    AIMaxDisplayLength: 3,      // MS4: can be used to truncate the AI path length shown
-    visualizeAIPlayer: 0,       // MS5: 0:default; 1=visualize AI player running in background
-    AIStabilityThreshold: 1.2,  // MS7: minimum proportional improvement before recommendation changes
-    AIadviceThresholdHigh: 0.7, // MS6: threshold on value to give AI advice in adaptive AI setting
-    AIadviceAngleThreshold: 30, // MS6: angle tolerance for accepting move in adaptive AI setting
-    AIframeDelay: 30,           // Delaying advice so that it doesn't overwhelm the player
+    maxSeconds: 180,                    // maximum number of seconds per round --> 3 minutes (consider doing 2.5 minutes)
+    AIMode:0,                           // MS4: 0=no assistance; 1=always on; 2=adaptive
+    AICollab: 0,                        // MS4: 0=ignorant; 1=intentional; 2=cognitive model
+    alpha: 0.9,                         // MS8: discounting parameter for AI planner
+    AIDisplayMode: 1,                   // MS4: 0=show movement path; 1=show where to click; 2=show which targets to intercept
+    AIMaxDisplayLength: 3,              // MS4: can be used to truncate the AI path length shown
+    visualizeAIPlayer: 1,               // MS5: 0:default; 1=visualize AI player running in background
+    visualizeAIPlayerOffline: 1,        // MS5: 0:default; 1=visualize AI player running in background
+    AIStabilityThreshold: 1.2,          // MS7: minimum proportional improvement before recommendation changes
+    AIadviceThresholdHigh: 0.7,         // MS6: threshold on value to give AI advice in adaptive AI setting
+    AIadviceAngleThreshold: 30,         // MS6: angle tolerance for accepting move in adaptive AI setting
+    AIframeDelay: 30,                   // Delaying advice so that it doesn't overwhelm the player
     spawnProbability:  1.0,
     spawnInterval: 10,
     valueSkew: 2,
@@ -180,243 +208,81 @@ let settings = {
     speedHigh: 2.99,               // highest end of object speed distribution
 };
 
-// let difficultySettings = {
-//     // CONDITION 1
-//     1: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2},  // MS7: minimum proportional improvement before recommendation changes,
-//             2: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2}},
-//         1: {1: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2},
-//             2: {AIMode: 0,
-//                 AIStabilityThreshold: 1.2}}},
-//     // CONDITION 2
-//     2: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2},
-//             2: {AIMode: 1, 
-//                 AIStabilityThreshold: 1.2}},
-//         1: {1: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2},
-//             2: {AIMode: 0,
-//                 AIStabilityThreshold: 1.2}}},
-//     // CONDITION 3
-//     3: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2},
-//             2: {AIMode: 0,
-//                 AIStabilityThreshold: 1.2}},
-//         1: {1: {AIMode: 1, 
-//                 AIStabilityThreshold: 1.2},
-//             2: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2}}},
-//     // CONDITION 4
-//     4: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2},
-//             2: {AIMode: 1, 
-//                 AIStabilityThreshold: 1.2}},
-//         1: {1: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2},
-//             2: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2}}},
-// };
-
-// let difficultySettings = {
-//     // CONDITION 1
-//     1: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 5},  // MS7: minimum proportional improvement before recommendation changes,
-//             2: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 5}},
-//         1: {1: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10},
-//             2: {AIMode: 0,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10}},
-//         2: {1: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15},
-//             2: {AIMode: 0,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15}}},
-//     // CONDITION 2
-//     2: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2, 
-//                 maxTargets: 10},
-//             2: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10}},
-//         1: {1: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10},
-//             2: {AIMode: 0,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10}}},
-//     // CONDITION 3
-//     3: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15},
-//             2: {AIMode: 0,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15}},
-//         1: {1: {AIMode: 0, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15},
-//             2: {AIMode: 0,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15}}},
-//     // CONDITION 4
-//     4: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 5},
-//             2: {AIMode: 1, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 5}},
-//         1: {1: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 5},
-//             2: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 5}}},
-//     // CONDITION 5
-//     5: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10},
-//             2: {AIMode: 1, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10}},
-//         1: {1: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10},
-//             2: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 10}}},
-//     // CONDITION 6
-//     6: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15},
-//             2: {AIMode: 1, 
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15}},
-//         1: {1: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15},
-//             2: {AIMode: 1,
-//                 AIStabilityThreshold: 1.2,
-//                 maxTargets: 15}}},
-// };
-
 let difficultySettings = {
-    // CONDITION 1
-    1: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2,
-                maxTargets: 5},  // MS7: minimum proportional improvement before recommendation changes,
-            2: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
+    // 5 targets first
+    1: {0: {1: {AICollab: 0,   // Pair A
+                maxTargets: 5},  
+            2: {AICollab: 1,
                 maxTargets: 5}},
-        1: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10}},
-        2: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
+        1: {1: {AICollab: 0,     // Pair A
                 maxTargets: 15},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
+            2: {AICollab: 1,
                 maxTargets: 15}}},
-    // CONDITION 2
-    2: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2, 
-                maxTargets: 5},
-            2: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
+
+    2: {0: {1: {AICollab: 1,   // Pair B
+                maxTargets: 5},  
+            2: {AICollab: 0,
                 maxTargets: 5}},
-        1: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
+        1: {1: {AICollab: 0,    // Pair A
                 maxTargets: 15},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
-                maxTargets: 15}},
-        2: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10}}},
-    3: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2, 
-                maxTargets: 10},
-            2: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10}},
-        1: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 5},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
-                maxTargets: 5}},
-        2: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 15},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
+            2: {AICollab: 1,
                 maxTargets: 15}}},
-    4: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2, 
-                maxTargets: 10},
-            2: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10}},
-        1: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 15},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
-                maxTargets: 15}},
-        2: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
+    
+    3: {0: {1: {AICollab: 0,    // Pair A
                 maxTargets: 5},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
-                maxTargets: 5}}},
-    5: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2, 
-                maxTargets: 15},
-            2: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 15}},
-        1: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 5},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
+            2: {AICollab: 1,
                 maxTargets: 5}},
-        2: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10}}},
-    6: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2, 
+        1: {1: {AICollab: 1,   // Pair B
                 maxTargets: 15},
-            2: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
+            2: {AICollab: 0,
+                maxTargets: 15}}},
+
+    4: {0: {1: {AICollab: 1,    // Pair B
+                maxTargets: 5}, 
+            2: {AICollab: 0,
+                maxTargets: 5}},
+        1: {1: {AICollab: 1,    // Pair B
+                maxTargets: 15},
+            2: {AICollab: 0,
+                maxTargets: 15}}},
+
+     // 15 Targets first
+    5: {0: {1: {AICollab: 0,   // Pair A
+                maxTargets: 15},  
+            2: {AICollab: 1,
                 maxTargets: 15}},
-        1: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
-                maxTargets: 10}},
-        2: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2,
+        1: {1: {AICollab: 0,     // Pair A
                 maxTargets: 5},
-            2: {AIMode: 0,
-                AIStabilityThreshold: 1.2,
+            2: {AICollab: 1,
                 maxTargets: 5}}},
+
+    6: {0: {1: {AICollab: 1,   // Pair B
+                maxTargets: 15},  
+            2: {AICollab: 0,
+                maxTargets: 15}},
+        1: {1: {AICollab: 0,    // Pair A
+                maxTargets: 5},
+            2: {AICollab: 1,
+                maxTargets: 5}}},
+    
+    7: {0: {1: {AICollab: 0,    // Pair A
+                maxTargets: 15},
+            2: {AICollab: 1,
+                maxTargets: 15}},
+        1: {1: {AICollab: 1,   // Pair B
+                maxTargets: 5},
+            2: {AICollab: 0,
+                maxTargets: 5}}},
+
+    8: {0: {1: {AICollab: 1,    // Pair B
+                maxTargets: 15}, 
+            2: {AICollab: 0,
+                maxTargets: 15}},
+        1: {1: {AICollab: 1,    // Pair B
+                maxTargets: 5},
+            2: {AICollab: 0,
+                maxTargets: 5}}},
+
 };
 
 function getPermutations(array) {
@@ -437,7 +303,7 @@ function getPermutations(array) {
     return permutations;
 }
 
-const seedSet = [12, 123, 1234, 12345, 123456, ];
+const seedSet = [12, 123, 1234, 12345, 123456];
 const maxTargetSet = [5, 10, 15];
 // const perumutedTargets = getPermutations(maxTargetSet);
 // console.log(perumutedTargets);
@@ -464,7 +330,7 @@ let drtLightChoice      = 0; // random choice of light to display
 
 let maxFrames = null;
 if (DEBUG){
-    maxFrames         = 60 * fps;// settings.maxSeconds * fps;
+    maxFrames         = settings.maxSeconds * fps;// settings.maxSeconds * fps;
 } else{ // set it to whatever you want
     maxFrames         = settings.maxSeconds * fps; //120 * 60; // Two minutes in frames
 }
@@ -482,6 +348,9 @@ let playerClicks    = [];
 let playerLocation  = [];
 let aiClicks        = [];
 let aiClicks_adjusted       = [];
+
+let aiClicks_offline = [];
+let aiClicks_adjusted_offline = [];
 
 let drtResponses    = [];
 let drtFalseAlarm   = [];
@@ -502,14 +371,17 @@ let counter = 0;
 // let eventStream = Array.from({ length: eventStreamSize }, () => ({}));// preallocate the array
 let eventStream = [];
 let AIeventStream = [];
+let AIeventStream_offline = [];
 
 // Variables for cursor
 let cursorSize = 40;
 let mouseX = 0, mouseY = 0;
 
 // Varaiables for HTML elements
+let totalScore = 0;
 let score = 0;
 let aiScore = 0;
+let aiScore_offline = 0;
 let numAIChanges = 0; // MS7 count of number of different targets pursued (measure of "neuroticism" or inverse "inertia")
 
 // Player and View Initialization (related to one another)
@@ -534,6 +406,9 @@ const player = {
     height:50,
     score:0
 };
+
+let humanImg = new Image();
+humanImg.src = './images/human-head-small.png'; // Path to your robot head image
 
 const camera = {
     x: world.width / 2,
@@ -566,6 +441,7 @@ let randomGenerator;
 //let sol; // MS7
 let firstStep, bestSol, allSol; // MS7  Global variable that holds the solutions of the planner 
 let firstStepOffline, bestSolOffline, allSolOffline; // MS7  Global variable that holds the solutions of the planner 
+let firstStepCollab, bestSolCollab, allSolCollab; // MS7  Global variable that holds the solutions of the planner for the online collaborative AI
 
 // let sol; // MS4: global variable that contains planned path for current frame
 
@@ -586,13 +462,19 @@ const AIplayer = {
 };
 let AIcaughtTargets = [];
 let AIplayerLocation = [];
+
+let robotHeadImg = new Image();
+robotHeadImg.src = './images/simple-robot-250px.png'; // Path to your robot head image
+
+
+let AIcaughtTargets_offline = [];
+let AIplayerLocation_offline = [];
+
 let numFramesPlayernotMoving = 0; // MS6
 let numFramesAfterCaughtTarget = 0; // MS6
 
-
-const AIplayerSize_online = 50;
-const AIplayer_online = {
-    color: 'rgba(0, 128, 0, 0.5)',//'rgba(255, 0, 0, 0.5)', 
+const AIplayer_offline = {
+    color: 'rgba(128, 128, 128, 0.5)',//'rgba(255, 0, 0, 0.5)', // grey color for the offline player
     x: canvas.width/2 + 150, //center the x,y in the center of the player.
     y: canvas.height/2 + 150,
     moving:false,
@@ -605,11 +487,6 @@ const AIplayer_online = {
     height:50,
     score:0
 };
-let AIcaughtTargets_online = [];
-let AIplayerLocation_online = [];
-let numFramesPlayernotMoving_AI_online = 0; // MS6
-let numFramesAfterCaughtTarget_AI_online = 0; // MS6
-
 //**************************************************** BLOCK RANDOMIZATION ******************************************************//
 
 async function initExperimentSettings() {
@@ -618,16 +495,17 @@ async function initExperimentSettings() {
     // Assign random condition (AI Adapt or AI Naive)
     // assignedCondition === 0 means that participant is in the AI Naive condition
     const aiBlockCondition = 'aiCondition'; // a string we use to represent the condition name
-    let numConditions = 6; // number of conditions
+    let numConditions = 8; // number of conditions
     let numDraws = 1; // number of draws
     let assignedCondition = await blockRandomization(db1, studyId, aiBlockCondition, numConditions, maxCompletionTimeMinutes, numDraws);
 
-    // random seeds should be randomly grabbed outside of permutation (generate four totally random integer values between 1 and 1000000)
-
-    // const seedCondition = 'seedCondition'; // a string we use to represent the condition name   
-    // numConditions = 24; // number of conditions
-    // numDraws = 1; // number of draws
-    // let assignedSeed = await blockRandomization(db1, studyId, seedCondition, numConditions, maxCompletionTimeMinutes, numDraws);
+    if (!DEBUG){
+        // random seeds should be randomly grabbed outside of permutation (generate four totally random integer values between 1 and 1000000)
+        // const seedCondition = 'seedCondition'; // a string we use to represent the condition name   
+        // numConditions = 8; // number of conditions
+        // numDraws = 1; // number of draws
+        // let assignedSeed = await blockRandomization(db1, studyId, seedCondition, numConditions, maxCompletionTimeMinutes, numDraws);
+    }
 
     var randomValues = [];
     for (var i = 0; i < 6; i++) {
@@ -648,9 +526,9 @@ if (noAssignment){
     // await the asynchroneous function to complete and retrieve the curret
     if (DEBUG){ // adjust value as needed for debuggin default is the same as the main experiment
         await initExperimentSettings();
-        curSeeds = [12,123,12345,123456, 1234566, 1234567];
+        // curSeeds = [12,123,12345,123456];
         // settings.maxTargets=100;
-        currentCondition = 1;
+        // currentCondition = 8;
         console.log('assignedCondition:', currentCondition); // Add this line
         console.log('assignedSeed:', curSeeds); // Add this line
     } else {
@@ -664,8 +542,9 @@ if (noAssignment){
 
 let visitedBlocks = 0;
 let numSurveyCompleted = 0;
-
-// ****************************************************** ASYNC UPDATE FUNCTIONS ********************************************************//
+let AIComparisonComplete = false;
+let prevSetting;
+// ****************************************************** UPDATE FUNCTIONS ********************************************************//
 
 // Start Game function
 async function startGame(round, condition, block, seeds) {
@@ -675,25 +554,32 @@ async function startGame(round, condition, block, seeds) {
     roundSettings = blockSetting[currentRound];
 
     // reassign default settings to the values grabbed from the current
-    settings.AIMode = roundSettings.AIMode;
-    settings.AIStabilityThreshold = roundSettings.AIStabilityThreshold;
+    // settings.AIMode = roundSettings.AIMode;
+    // settings.AIStabilityThreshold = roundSettings.AIStabilityThreshold;
+    settings.AICollab = roundSettings.AICollab;
     settings.maxTargets = roundSettings.maxTargets;
 
     // Debug setting for max targets
-    if (DEBUG) settings.maxTargets=5; // this was to get many targets for debuggin
+    // if (DEBUG) settings.maxTargets=8; // this was to get many targets for debuggin
    
+    // Change to the next seed
     if (currentBlock == 0) {
         settings.randSeed = seeds[currentRound - 1];
     } else if (currentBlock == 1) {
         settings.randSeed = seeds[currentRound + 1];
-    } else if (currentBlock == 2){
-        settings.randSeed = seeds[currentRound + 3]
-       
-    }
+    } 
+
+   
+    if (settings.AICollab == 0  && settings.maxTargets == 5) AIplayer.color = 'rgba(0, 128, 0, 0.5)'; // green transparent
+    if (settings.AICollab == 1 && settings.maxTargets == 5) AIplayer.color = 'rgba(128, 0, 128, 0.5)'; // purple transparent
+
+    // if (settings.AICollab == 0  && settings.maxTargets == 15) AIplayer.color = 'rgba(128, 128, 128, 0.7)'; // iron transparent
+    if (settings.AICollab == 0  && settings.maxTargets == 15) AIplayer.color = 'rgba(0, 0, 255, 0.5)'; // blue transparent
+    if (settings.AICollab == 1 && settings.maxTargets == 15) AIplayer.color = 'rgba(184, 115, 51, 0.5)'; // copper transparent 
 
     if (DEBUG){
         //console.log("Default Settings AI Mode", settings.AIMode);
-        console.log("Current AI Mode", roundSettings.AIMode);
+        console.log("Current Collab AI Mode", roundSettings.AICollab);
         console.log("Current Settings", roundSettings);
         console.log("Current Block", currentBlock);
         console.log("Current Round", currentRound);
@@ -726,12 +612,12 @@ async function endGame() {
 
     writeGameDatabase();
 
-    if (currentRound < maxRounds && numSurveyCompleted < 3) {
+    if (currentRound < maxRounds) {//&& numSurveyCompleted < 3) {
         currentRound++;
-        await runGameSequence("You've Completed a Round and earned " + score + " points. Click OK to continue.");
+        await runGameSequence("You've Completed a Round and earned " + totalScore + " points. Click OK to continue.");
         await resetGame();
         startGame(currentRound, currentCondition, currentBlock, curSeeds); // Start the next round
-    } else if (currentRound >= maxRounds && numSurveyCompleted < 3) {
+    } else if (currentRound >= maxRounds && blockInfo.completedBlock < 2) {// && numSurveyCompleted < 3) {
 
         // All rounds in the current block are completed
         blockInfo.completedBlock++;
@@ -740,24 +626,26 @@ async function endGame() {
         currentRound = 1; // Reset the round counter
         currentBlock += 1; // Move to next block
        
-        await runGameSequence("You've Completed a Block and earned " + score + " points. Click OK to continue.");
+        await runGameSequence("You've Completed a Block and earned " + totalScore + " points. Click OK to continue.");
         await resetGame();
 
-        if (settings.AIMode == 0) {
-            loadWorkLoadSurvey(); // no ai gets workload-only survey
-            $("#survey-workload-container").attr("hidden", false); // survey handles end-of-experiment logic
-            $("#full-game-container").attr("hidden", true); 
-            visitedBlocks++;
+        visitedBlocks++;
 
-        } else if (settings.AIMode == 1) {
-            loadFullSurvey();
-            $("#survey-full-container").attr("hidden", false);
+        if (visitedBlocks == 1) {
+            // prevSetting = settings
+            await loadAIComparison();
+            $("#ai-comparison-container").attr("hidden", false);
             $("#full-game-container").attr("hidden", true);
-            visitedBlocks++;
         }
     
-        if (visitedBlocks <= 2) {
+        if (visitedBlocks < 2) {
             startGame(currentRound, currentCondition,currentBlock,curSeeds); // Start the next round
+        } else{
+            console.log("End of Experiment");
+            loadAIComparison();
+            $("#ai-comparison-container").attr("hidden", false);
+            $("#full-game-container").attr("hidden", true);
+        
         }
     }
 }
@@ -769,29 +657,51 @@ async function resetGame(){
     playerClicks            = null;
     playerLocation          = null;
     score                   = null;
-    aiScore                 = null;
     player.score            = null;
+
+    aiScore                 = null;
     AIplayer.score          = null
     AIcaughtTargets         = null;
     AIplayerLocation        = null;
-    aiClicks_adjusted       = null;
+    // aiClicks_adjusted       = null;
+    aiClicks                = null;
+    aiClicks_offline        = null;
+
+    aiScore_offline                 = null;
+    AIplayer_offline.score          = null
+    AIcaughtTargets_offline         = null;
+    // AIplayerLocation_offline       = null;
+    // aiClicks_adjusted_offline      = null;
+
     drtOnset                = null;
     drtResponses            = null;
     drtFalseAlarm           = null;
 
     // then reassign the variables
     eventStream             = [];//Array.from({ length: eventStreamSize }, () => ({}));// preallocate the array
-    AIeventStream           = [];
     objects                 = []; // Reset the objects array
     spawnData               = [];
     caughtTargets           = [];
     playerClicks            = [];
     playerLocation          = [];
-    score                   = 0;    
+    score                   = 0;   
+
+    AIeventStream           = [];
     aiScore                 = 0;
     player.score            = 0;
     AIplayer.score          = 0
-    aiClicks_adjusted       = [];
+    aiClicks                = [];
+    aiClicks_offline        = [];
+    AIcaughtTargets         = [];
+    AIplayerLocation        = [];
+
+    // AIeventStream_offline           = [];
+    aiScore_offline                 = 0;
+    AIplayer_offline.score          = 0
+    // aiClicks_adjusted_offline       = [];
+    AIcaughtTargets_offline         = [];
+    // AIplayerLocation_offline        = [];
+
     drtOnset                = [];
     drtResponses            = [];
     drtFalseAlarm           = [];
@@ -802,17 +712,14 @@ async function resetGame(){
     counter = 0; // counter on the DRT mistakes
     drtCount = 0;
 
-    AIcaughtTargets         = [];
-    AIplayerLocation        = [];
     
     player.x        = canvas.width/2;
     player.y        = canvas.height/2;
     player.targetX  = canvas.width/2;
     player.targetY  = canvas.height/2;
     AIplayer.x, AIplayer.y = canvas.width/2  + 150; // MS5: Reset the player position
+    AIplayer_offline.x, AIplayer_offline.y = canvas.width/2  + 150; // MS5: Reset the player position
 }
-
-// ****************************************************** ACTIVE UPDATE FUNCTIONS ********************************************************//
 
 function gameLoop(timestamp) {
     if (!isGameRunning) return;
@@ -866,23 +773,15 @@ function render() {
     drawWorldBoundary();                         
     drawPlayer();                                     
     if (settings.visualizeAIPlayer==1) drawAIPlayer();
-    if (player.moving) drawArrowDirection();          // Draw arrow to show player direction
-    // displayAIstatus();                                // Display AI status -- ON or OFF
+    // if (settings.visualizeAIPlayerOffline==1) drawAIPlayerOffline();
+    // if (player.moving) drawArrowDirection();          // Draw arrow to show player direction
+    displayAIStatus();                                // Display which ai
     drawAISolution();                                  // Draw AI solution of type specified in settings
     // drawFullAISolutionDEBUG();                     // Draw the full AI solution
     // drawTargetLocation();                             // Draw the X where the player is moving towards
     drawObjects();         
 
     drawLight(drtLightChoice);
-    // if (drtLightChoice == 1) drawLight(50, 50);
-    // if (drtLightChoice == 2) drawLight(50, 750);
-    // if (drtLightChoice == 3) drawLight(750, 50);
-    // if (drtLightChoice == 4) drawLight(750, 750);
-    // drawLight(50, 50) 
-    // drawLight(50, 750) 
-    // drawLight(750, 50)
-    // drawLight(750, 750)
-
     ctx.restore();
     drawScore();                      
 }
@@ -901,31 +800,6 @@ function updateObjects(settings) {
         deltaFrameCount = 0;
     }
     
-    // Engage DRT after some pseudo-random interval between 3 & 5 seconds
-    // if (DEBUG) console.log("DRT Interval", randDRTinterval);
-    
-    // if (drtCount == randDRTinterval){
-    //     // turn on light
-    //     isLightOn = true;
-    //     drtInitFrame = frameCountGame;
-    //     drtOnset.push(drtInitFrame);
-
-    //     //reset the counter and random time
-    //     randDRTinterval = Math.floor(randomGenerator() * 3 + 3) * fps;
-    //     drtLightChoice = Math.floor(randomGenerator() * 4);
-
-    //     drtCount = 0;
-    // }
-
-    // // If the light has been on more than 2.5 seconds, then turn off the light and record an invalid trial.
-    // if (drtCount >= drtMissHigh && isLightOn){//(responseTime >=  drtMissHigh){
-    //     let response = {frame: frameCountGame, responseTime: null, initFrame: drtInitFrame, valid: false, location: drtLightChoice};
-    //     drtResponses.push(response);
-    //     isLightOn = false;
-    //     drtCount = 0;
-    //     missFlag = true;
-    // }
-
     // Turn off the false alarm and/or miss flag after 90 frames --> triggers removal of warning caption
     if (counter >= 90 && falseAlarmFlag){
         falseAlarmFlag = false;
@@ -980,6 +854,7 @@ function updateObjects(settings) {
 
     // MS5: Update AI player position if it is moving
     AIplayer.velocity       = settings.playerSpeed;
+    AIplayer_offline.velocity = settings.playerSpeed;
 
     const deltaX            = AIplayer.targetX - AIplayer.x;
     const deltaY            = AIplayer.targetY - AIplayer.y;
@@ -997,6 +872,24 @@ function updateObjects(settings) {
         AIplayer.y         += AIplayer.velocity * Math.sin(AIplayer.angle);
         AIplayer.moving     = true;
         AIplayerLocation.push({time: frameCountGame, x: AIplayer.x, y: AIplayer.y});
+    }
+
+    const deltaX_offline              = AIplayer_offline.targetX - AIplayer_offline.x;
+    const deltaY_offline              = AIplayer_offline.targetY - AIplayer_offline.y;
+    const distanceToTarget_offline    = Math.sqrt(deltaX_offline * deltaX_offline + deltaY_offline * deltaY_offline);
+
+    if (distanceToTarget_offline < AIplayer_offline.velocity) {
+        // AI Player has arrived at the target location
+        AIplayer_offline.x         = AIplayer_offline.targetX;
+        AIplayer_offline.y         = AIplayer_offline.targetY;
+        AIplayer_offline.moving    = false;
+    } else {
+        // Move player towards the target
+        AIplayer_offline.angle      = Math.atan2(deltaY_offline, deltaX_offline);
+        AIplayer_offline.x         += AIplayer_offline.velocity * Math.cos(AIplayer_offline.angle);
+        AIplayer_offline.y         += AIplayer_offline.velocity * Math.sin(AIplayer_offline.angle);
+        AIplayer_offline.moving     = true;
+        // AIplayerLocation.push({time: frameCountGame, x: AIplayer.x, y: AIplayer.y});
     }
 
     // MS: and inserted the following code
@@ -1021,7 +914,7 @@ function updateObjects(settings) {
             let distanceFromCenter = Math.sqrt(dx * dx + dy * dy) - 10;
 
             let willOverlap = willSquareAndCircleOverlap(player.x, player.y, player.dx, player.dy, player.width,
-                obj.x, obj.y, obj.dx, obj.dy, obj.size);
+                obj.x, obj.y, obj.dx, obj.dy, obj.size, player.timeToIntercept);
             
             if (willOverlap){
                 obj.willOverlap = willOverlap;
@@ -1029,7 +922,7 @@ function updateObjects(settings) {
                 obj.willOverlap = false;
             }
 
-            // calculates if the player will collide with a target on it's current path
+
             // console.log("Will overlap", willOverlap);
 
             if (willOverlap) drawDebugOverlap(obj, willOverlap);
@@ -1048,7 +941,7 @@ function updateObjects(settings) {
                                     x: obj.x, y: obj.y,
                                     dx: obj.dx, dy: obj.dy,
                                     vx: obj.vx, vy: obj.vy, speed: obj.speed,
-                                    clicked: obj.clicked, marked: obj.marked};
+                                    clicked: obj.clicked, marked: obj.marked, AImarked: obj.AImarked};
 
                 let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
                                     dx: player.dx, dy: player.dy,
@@ -1058,20 +951,19 @@ function updateObjects(settings) {
 
                 let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
                                         intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice}; // consider adding more to this
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice}; // consider adding more to this
                 let eventType       = 'exit';
 
                 // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: playerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
-                                    gameState: gameState};
+                                    interceptData: interceptData, gameState: gameState};
 
                 // if (DEBUG) console.log("Exit Event Object", eventObject);
                 eventStream.push(eventObject);
             }
             
-            // Player catches a new object
+            // ********************************** Human CAUGHT TARGET ************************************//
             if (!obj.intercepted && checkCollision(player, obj)) {
                 // Collision detected
                 obj.intercepted   = true; // MS2: added this flag
@@ -1079,13 +971,13 @@ function updateObjects(settings) {
                 score             += obj.value;
                 player.score      += obj.value;
 
-                // ********************************** Human Caught Target Event **********************************//
+                // *************************** Data Writing *********************************//
                 let gameState = extractGameState(objects);
                 let objectData      = {ID: obj.ID, value: obj.value,
                                     x: obj.x, y: obj.y,
                                     dx: obj.dx, dy: obj.dy,
                                     vx: obj.vx, vy: obj.vy, speed: obj.speed,
-                                    clicked: obj.clicked, marked: obj.marked};
+                                    clicked: obj.clicked, marked: obj.marked, AImarked: obj.AImarked};
 
                 let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
                                     dx: player.dx, dy: player.dy,
@@ -1095,12 +987,11 @@ function updateObjects(settings) {
 
                 let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
                                         intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice};
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice};
                 let eventType       = 'catch';
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: playerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
-                                    gameState: gameState};
+                                    interceptData: interceptData, gameState: gameState};
 
                 // if (DEBUG) console.log("Caught Target Event Object", eventObject);
 
@@ -1111,10 +1002,15 @@ function updateObjects(settings) {
                
             }
 
+             // MS6 Checking times between catching objects for human player
+            if (caughtAnything) numFramesAfterCaughtTarget=0; else numFramesAfterCaughtTarget++;
+
+            // ********************************** AI ONLINE CAUGHT TARGET ************************************//
+
             // if AI player catches a new object
-            if (!obj.AIintercepted && checkCollision(AIplayer, obj)) { // MS5: added a condition
+            if (!obj.intercepted && checkCollision(AIplayer, obj)) { // MS5: added a condition
                 // Collision detected
-                obj.intercepted   = true; // Added this flag to make sure the object despawns after being caught  
+                obj.intercepted   = true; // Added this flage to make sure the object despawns after being caught  
                 // obj.AIintercepted = true; // MS2: added this flag             
                 //console.log("AI Collision detected!");
                 let caughtObj     = {frame: frameCountGame, target: obj}   
@@ -1126,18 +1022,19 @@ function updateObjects(settings) {
                 // console.log("AI Score: " +  aiScore + " Average Score per frame " + ( aiScore / frameCountGame).toFixed(4) + 
                 // "  Number of target changes: " + numAIChanges + "  Prob Change Target per Frame: " + (numAIChanges/frameCountGame).toFixed(6) );
 
-                // Make sure player stops if AI catches the target
-                if (obj.ID == player.targetObjID){
-                    player.moving = false;
-                }
+                // Make sure player stops if AI catches the target --> comment out to remove synchrony between players and ai
+                // if (obj.ID == player.targetObjID){
+                //     player.moving = false;
+                // }
 
-                // ********************************** AI Caught Target Event **********************************//
+                // *************************** Data Writing *********************************//
                 let gameState = extractGameState(objects);
-                let objectData      = {ID: obj.ID, value: obj.value,
+                let objectData    = {ID: obj.ID, value: obj.value,
                                     x: obj.x, y: obj.y,
                                     dx: obj.dx, dy: obj.dy,
                                     vx: obj.vx, vy: obj.vy, speed: obj.speed,
-                                    clicked: obj.clicked, marked: obj.marked};
+                                    clicked: obj.clicked, marked: obj.marked, AImarked: obj.AImarked};
+
 
                 let AIplayerData      = {x: AIplayer.x, y: AIplayer.y, speed: AIplayer.velocity, 
                                     targetX: AIplayer.targetX, targetY: AIplayer.targetY,
@@ -1145,177 +1042,179 @@ function updateObjects(settings) {
                                     score:AIplayer.score};
 
                 let interceptData   = {x: AIplayer.targetX, y: AIplayer.targetY, time: 0, distance: 0, intendedTarget: AIplayer.ID};
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
                 let eventType       = 'catch';
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: AIplayerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
-                                    gameState: gameState};
+                                    interceptData: interceptData,gameState: gameState};
 
                 // if (DEBUG) console.log("Caught Target Event Object", eventObject);
 
                 AIeventStream.push(eventObject)
             }
-        }
-        
-        //spawnObject(settings); // MS: I don't understand why this function was called within this loop over targets; this be called outside of this loop???
 
-        // Add to missed array iff : 1) Not Active, 2) Not Tagged, 3) Correct Target Shape.
-        if (!obj.active && obj.objType === 'target') {
-            // Log missed triangle
-            missedTargets.push({ x: obj.x, y: obj.y, time:frameCountGame});
+            // ********************************** AI OFFLINE CAUGHT TARGET ************************************//
 
-            // Calls a function cascade to display a message "Target Missed!"
-            targetMissed();
+            if (!obj.AIintercepted && checkCollision(AIplayer_offline, obj)) { // MS5: added a condition
+                // Collision detected
+                obj.AIintercepted = true; // MS2: added this flag             
+                let caughtObj     = {frame: frameCountGame, target: obj}   
+                AIcaughtTargets_offline.push(caughtObj);
+
+                aiScore_offline           += obj.value;
+                AIplayer_offline.score    += obj.value;
+                if (DEBUG) console.log("AI Offline Score: ", AIplayer_offline.score);
+
+                // *************************** Data Writing *********************************//
+
+                let gameState = extractGameState(objects);
+                let objectData      = {ID: obj.ID, value: obj.value,
+                                    x: obj.x, y: obj.y,
+                                    dx: obj.dx, dy: obj.dy,
+                                    vx: obj.vx, vy: obj.vy, speed: obj.speed,
+                                    clicked: obj.clicked, marked: obj.marked, AImarked: obj.AImarked};
+
+                let AIplayerData      = {x: AIplayer_offline.x, y: AIplayer_offline.y, speed: AIplayer_offline.velocity, 
+                                    targetX: AIplayer_offline.targetX, targetY: AIplayer_offline.targetY,
+                                    angle: AIplayer_offline.angle, moving: AIplayer_offline.moving,
+                                    score: AIplayer_offline.score};
+
+                let interceptData   = {x: AIplayer_offline.targetX, y: AIplayer_offline.targetY, time: 0, distance: 0, intendedTarget: AIplayer_offline.ID};
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                let eventType       = 'catch';
+                let eventObject     = {time: frameCountGame, eventType: eventType, 
+                                    objectData: objectData, playerData: AIplayerData, 
+                                    interceptData: interceptData, gameState: gameState};
+
+                // if (DEBUG) console.log("Caught Target Event Object", eventObject);
+
+                AIeventStream_offline.push(eventObject)
+            }
         }
     });
 
-    if (caughtAnything) numFramesAfterCaughtTarget=0; else numFramesAfterCaughtTarget++; // MS6
+    // ********************************** ONLY Remove Objects that have EXITED ************************************//
 
     // MS4: Remove items starting from the end
     for (let i = toRemove.length - 1; i >= 0; i--) {
         objects.splice(toRemove[i], 1);
     }
 
-    // // MS7: Run planner for the offline AI player
-    // let prevBestSolOffline = bestSolOffline;
-    // [firstStepOffline, bestSolOffline, allSolOffline ] = runAIPlanner( objects, AIplayer , observableRadius , center, 'AI', settings.AIStabilityThreshold, prevBestSolOffline, allSolOffline, frameCountGame );
+    // **************************************** Run the Collab AI Planner ****************************************//
     
-    // if ((prevBestSolOffline != null) && (bestSolOffline.ID != prevBestSolOffline.ID)) {
-    //     numAIChanges++;
-    // }
+    // Collab player
+    let prevBestSolCollab = bestSolCollab;
+    let prevFirstStepCollab = firstStepCollab;
 
-    // AIplayer.targetX = firstStepOffline.x; // MS7 -- just save the firstStepOffline object to firebase
-    // AIplayer.targetY = firstStepOffline.y; 
+    let objectsRemoved;
 
-    // // MS7: Run the planner conditional on the human player
-    // [ firstStep, bestSol, allSol ] = runAIPlanner( objects, player , observableRadius , center, 'human', settings.AIStabilityThreshold, bestSol, allSol, frameCountGame ); 
-
-    // **************************************** Run the AI Planner ****************************************//
+    // Apply the AI settings
+    if (settings.AICollab == 1) objectsRemoved = objects.filter(obj => !obj.willOverlap);
+    if (settings.AICollab == 0) objectsRemoved = objects;
     
-    let prevBestSolOffline = bestSolOffline; // keep as is
-    let prevFirstStep = firstStepOffline;
-    // let prevSolID = -1;
-    // let prevSol;
-    // if (bestSolOffline != null) {
-    //     let prevSolID = bestSolOffline.firstStepID;
-    //     prevSol = bestSolOffline;
-    // }
-    // if (DEBUG) console.log("previously first step", prevFirstStep);
-
-    // remove the marked object from the AI player object set
-    // let objectsRemoved = objects.filter(obj => obj.ID !== player.intendedTarget);
-
-    let objectsAI;
-
-    // if (settings.AICollab == 1) objectsAI = objects.filter(obj => !obj.willOverlap);
-    // if (settings.AICollab == 0) objectsAI = objects;
-
-
-    // MS8
-    // [ firstStepOffline, bestSolOffline, allSolOffline ] = runAIPlanner(objectsAI, AIplayer , observableRadius , center, 'AI', 
-    //     settings.AIStabilityThreshold, prevBestSolOffline, allSolOffline, frameCountGame, settings.alpha );
-
-    // original code
-    [ firstStepOffline, bestSolOffline, allSolOffline ] = runAIPlanner(objects, AIplayer , observableRadius , center, 'AI', 
-    settings.AIStabilityThreshold, prevBestSolOffline, allSolOffline, frameCountGame, settings.alpha );
-
+    // SK1 Online AI player
+    [ firstStepCollab, bestSolCollab, allSolCollab ] = runAIPlanner(objectsRemoved, AIplayer , observableRadius , center, 'collab', 
+        settings.AIStabilityThreshold, prevBestSolCollab, allSolCollab, frameCountGame, settings.alpha );
     
     // AI intention for click,target pair
-   
-    AIplayer.targetX = firstStepOffline.x; // MS7 -- just save the firstStepOffline object to firebase
-    AIplayer.targetY = firstStepOffline.y; 
-    AIplayer.ID      = firstStepOffline.ID; // MS8 // ID of the object to intercept
-    // AIplayer.ID      = bestSolOffline.interceptionOrder[0]; // MS8 // ID of the object to intercept
-    // AIplayer.ID      = bestSolOffline.firstStepID;
+    AIplayer.targetX = firstStepCollab.x; // MS7 -- just save the firstStepOffline object to firebase
+    AIplayer.targetY = firstStepCollab.y; 
+    AIplayer.ID      = firstStepCollab.ID; // MS8 // ID of the object to intercept
 
-    // if the plan is stable and the first target has already been caught, then AI should move to the next target in the sequence
-    // let checkSolStability;
-    // if ((bestSolOffline != null) && (prevSol != null)) checkSolStability = arraysAreIdentical(bestSolOffline.interceptionOrder, prevSol.interceptionOrder);
-    // if (checkSolStability){
-    //     // if the plan is unchaning, then
-    //     console.log("Plans are identical");
-    // }
-
-
-    if ((prevFirstStep != null) && (AIplayer.ID != prevFirstStep.ID ) && DEBUG){
-        console.log("Best Solution Object:", bestSolOffline);
-        console.log("AI ID", AIplayer.ID); 
-        console.log("First Step ID", bestSolOffline.firstStepID);
-        console.log("Interception Order", bestSolOffline.interceptionOrder);
-        // alert("AI target is new! The ID is " + AIplayer.ID + " and the previous ID was " + prevFirstStep.ID);
-        // alert("AI is currently Headed to " + AIplayer.targetX + " " + AIplayer.targetY + " and the previous target was " + prevFirstStep.x + " " + prevFirstStep.y);
-        // alert("Best solution offline is " + bestSolOffline.ID + " and the previous best solution was " + prevBestSolOffline.ID);
+    if (AIplayer.ID == -1){
+        AIplayer.toCenter = true; 
+    } else{
+        AIplayer.toCenter = false;
     }
 
-    // AI Player -- mark the object
-    if ((prevFirstStep!= null) && (prevFirstStep.ID != AIplayer.ID)){
-        // to mark an object that the is valid for the AI
-        objects.forEach((obj) => {
+    // mark the object
+    if ((prevFirstStepCollab!= null) && (prevFirstStepCollab.ID != AIplayer.ID)){
+        objects.forEach((obj, index) => {
             if (obj.ID == AIplayer.ID){
                 obj.AImarked = true;
-                
-            } else if (obj.ID == prevFirstStep.ID){
+            } 
+            if (obj.ID == prevFirstStepCollab.ID){
                 obj.AImarked = false;
             }
         });
-
-        // to unmark the object that was previously marked from the general object set
-        // objects.forEach((obj) => {
-        //     if (obj.ID == prevFirstStep.ID && obj.AImarked){
-        //         obj.AImarked = false;
-        //     }
-        // });
-    }
-    
-    if ((prevBestSolOffline != null) && (bestSolOffline.ID != prevBestSolOffline.ID)) {
+    } 
+      
+    // keep track of collab agent decisions
+    if ((prevFirstStepCollab != null) && (bestSolCollab.ID != prevBestSolCollab.ID)) {
         // push AI intention array
         // aiIntention.push();
-        let aiIntention = {frame: frameCountGame, x: AIplayer.targetX, y: AIplayer.targetY, id: bestSolOffline.ID};
+        let aiIntention = {frame: frameCountGame, x: AIplayer.targetX, y: AIplayer.targetY, id: bestSolCollab.ID};
         aiClicks.push(aiIntention);
-        aiClicks_adjusted.push(aiIntention);
+        // aiClicks_adjusted.push(aiIntention);
         numAIChanges++;
-    } else if (prevBestSolOffline == null) {
+    } else if (prevBestSolCollab == null) {
         // aiIntention.push
-        let aiIntention = {frame: frameCountGame, x: AIplayer.targetX, y: AIplayer.targetY, id: bestSolOffline.ID};
+        let aiIntention = {frame: frameCountGame, x: AIplayer.targetX, y: AIplayer.targetY, id: bestSolCollab.ID};
         aiClicks.push(aiIntention);
-        aiClicks_adjusted.push(aiIntention);
+        // aiClicks_adjusted.push(aiIntention);
     }
 
-    // we need to save ()
+    // **************************************** Run the Offline AI Planner ****************************************//
+
+    let prevBestSolOffline = bestSolOffline;
+    let prevFirstStepOffline = firstStepOffline;
+
+    [ firstStepOffline, bestSolOffline, allSolOffline ] = runAIPlanner(objects, AIplayer_offline , observableRadius , center, 'AI', 
+        settings.AIStabilityThreshold, prevBestSolOffline, allSolOffline, frameCountGame, settings.alpha );
+    
+    AIplayer_offline.targetX = firstStepOffline.x; // MS7 -- just save the firstStepOffline object to firebase
+    AIplayer_offline.targetY = firstStepOffline.y; 
+    AIplayer_offline.ID      = firstStepOffline.ID; // MS8 // ID of the object to intercept
+
+    // we need to save the decisions from the offline agent
+    if ((prevFirstStepOffline != null) && (bestSolOffline.ID != prevBestSolOffline.ID)) { // all other decisions
+        // push AI intention array
+        // aiIntention.push();
+        let aiIntention_offline = {frame: frameCountGame, x: AIplayer_offline.targetX, y: AIplayer_offline.targetY, id: bestSolOffline.ID};
+        aiClicks_offline.push(aiIntention_offline);
+        numAIChanges++;
+    } else if (prevBestSolCollab == null) { // first decision
+        // aiIntention.push
+        let aiIntention_offline = {frame: frameCountGame, x: AIplayer_offline.targetX, y: AIplayer_offline.targetY, id: bestSolOffline.ID};
+        aiClicks_offline.push(aiIntention_offline);
+        numAIChanges++;
+    }
+
+     // ************************************* Run the Human Assistive AI Planner ***********************************//
+
 
     // Run the planner conditional on the human player
     // MS8
     [ firstStep, bestSol, allSol ] = runAIPlanner( objects, player , observableRadius , center, 'human', settings.AIStabilityThreshold, bestSol, allSol, frameCountGame, settings.alpha );
     
-    if (settings.AIMode>0) {    
-        // MS6
-        // Calculate the value of the human's current target
-        player.shownAdvice = true;
+    // if (settings.AIMode>0) {    
+    //     // MS6
+    //     // Calculate the value of the human's current target
+    //     player.shownAdvice = true;
 
-        if (settings.AIMode >= 2) {
-            //if ((frameCountGame > 100) & (player.moving)) {
-            //    console.log( 'test case');
-            //}
-            // MS7
-            let [ valueHumanPlan , valuesSuggestions ] = calcValueHumanPlan( bestSol , allSol, player , settings.AIadviceAngleThreshold, ctx, objects  ); 
-            player.shownAdvice = false;
+    //     if (settings.AIMode >= 2) {
+    //         //if ((frameCountGame > 100) & (player.moving)) {
+    //         //    console.log( 'test case');
+    //         //}
+    //         // MS7
+    //         let [ valueHumanPlan , valuesSuggestions ] = calcValueHumanPlan( bestSol , allSol, player , settings.AIadviceAngleThreshold, ctx, objects  ); 
+    //         player.shownAdvice = false;
 
-            const deltaX = player.x - center.x;
-            const deltaY = player.y - center.y;
-            const distanceToCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    //         const deltaX = player.x - center.x;
+    //         const deltaY = player.y - center.y;
+    //         const distanceToCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-            if ((numFramesAfterCaughtTarget > settings.AIframeDelay) && (distanceToCenter > 50)) {
-                if (!player.moving) {
-                    player.shownAdvice = true;
-                } else if (player.moving && (valueHumanPlan <= settings.AIadviceThresholdHigh)) {
-                    player.shownAdvice = true;
-                }
-            }
-            //console.log( 'Numframesplayernotmoving=' + numFramesPlayernotMoving + ' NumFramesAfterCaughtTarget=' + numFramesAfterCaughtTarget + ' ValuePlan=' + valueHumanPlan);
-        }
+    //         if ((numFramesAfterCaughtTarget > settings.AIframeDelay) && (distanceToCenter > 50)) {
+    //             if (!player.moving) {
+    //                 player.shownAdvice = true;
+    //             } else if (player.moving && (valueHumanPlan <= settings.AIadviceThresholdHigh)) {
+    //                 player.shownAdvice = true;
+    //             }
+    //         }
+    //         //console.log( 'Numframesplayernotmoving=' + numFramesPlayernotMoving + ' NumFramesAfterCaughtTarget=' + numFramesAfterCaughtTarget + ' ValuePlan=' + valueHumanPlan);
+    //     }
          
-    }
+    // }
 }
 
 function spawnObject(settings){
@@ -1342,26 +1241,7 @@ function spawnObject(settings){
         newObject.spawnX = location.x;
         newObject.spawnY = location.y;
 
-        // ************************* Set Velocity Towards Observalbe Area ******************** //  
-        // setVelocityTowardsObservableArea(newObject);
-        // Calculate angle towards the center
-        let angleToCenter = Math.atan2(center.y - newObject.y, center.x - newObject.x);
-
-        // Define the cone's range (22.5 degrees in radians)
-        let coneAngle = 90 * (Math.PI / 180); // Convert degrees to radians
-
-        // Randomly choose an angle within the cone
-        //let randomAngleWithinCone = angleToCenter - coneAngle / 2 + Math.random() * coneAngle;
-        let randomAngleWithinCone = angleToCenter - coneAngle / 2 + randomGenerator()  * coneAngle;
-
-        // Set velocity based on the angle within the cone
-        newObject.vx = Math.cos(randomAngleWithinCone);
-        newObject.vy = Math.sin(randomAngleWithinCone);
-
-        newObject.dx = newObject.vx * newObject.speed;
-        newObject.dy = newObject.vy * newObject.speed;
-
-        // ************************* Push Newly Set Object Into the Game ******************** //  
+        setVelocityTowardsObservableArea(newObject);
 
         // push to objects array in order to render and update
         objects.push(newObject);
@@ -1374,7 +1254,7 @@ function spawnObject(settings){
                             x: newObject.x, y: newObject.y,
                             dx: newObject.dx, dy: newObject.dy,
                             vx: newObject.vx, vy: newObject.vy, speed: newObject.speed,
-                            clicked: newObject.clicked, marked: newObject.marked};
+                            clicked: newObject.clicked, marked: newObject.marked, AImarked: newObject.AImarked};
 
         let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
                             dx: player.dx, dy: player.dy,
@@ -1384,13 +1264,12 @@ function spawnObject(settings){
 
         let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
                                 intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
-        let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+        // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
         let eventType       = 'spawn';
 
         let eventObject     = {time: frameCountGame, eventType: eventType, 
                             objectData: objectData, playerData: playerData, 
-                            interceptData: interceptData, drtStatus: drtStatus,
-                            gameState: gameState};
+                            interceptData: interceptData, gameState: gameState};
 
         // if (DEBUG) console.log("Spawn Event Object", eventObject);
 
@@ -1431,12 +1310,12 @@ function createComposite(settings) {
 
     // let fillRadius = values[valueCounter];
     // valueCounter++;
-    if (DEBUG){
-        console.log("Value Sampled", fillRadius);
-        console.log("Data Type of Value", typeof fillRadius);
-        // console.log("Sampled Value base datatype", typeof fillRadius);
-        // console.log("Sampled Value changed dtype", typeof parseInt(fillRadius));
-    } 
+    // if (DEBUG){
+    //     console.log("Value Sampled", fillRadius);
+    //     console.log("Data Type of Value", typeof fillRadius);
+    //     // console.log("Sampled Value base datatype", typeof fillRadius);
+    //     // console.log("Sampled Value changed dtype", typeof parseInt(fillRadius));
+    // } 
 
     // Eta controls the skewness of the value distribution
     // let eta = settings.valueSkew || 1; // Default to 1 if not provided
@@ -1459,7 +1338,7 @@ function createComposite(settings) {
         dy: 0,
         velAngle: 0, // initial velocity angle is zero --> reset in the setVelocityTowardsObservableArea
         size: shapeSize,
-        outerColor: 'rgba(0, 0, 255, 0.5)', //'rgb(170,0,255)',
+        outerColor: 'rgba(65, 54, 54, 0.5)',//'rgba(0, 0, 255, 0.4)', // blue// 'rgba(47, 30, 30, 0.5)',//'rgba(65, 54, 54, 0.5)', // good color //'rgba(143, 136, 136, 0.5)',// offwhite greyish , //'rgb(170,0,255)',
         innerColor:  'orange', //'rgb(255,170,0)',
         shape: shapeType, // Add shape type here
         type: 'target',
@@ -1601,6 +1480,7 @@ function extractGameState(objects){
         speed: obj.speed,
         clicked: obj.clicked,
         marked:obj.marked,
+        AImarked:obj.AImarked,
         value: obj.value
     }));
 }
@@ -1707,6 +1587,8 @@ function drawPlayer() {
 
     ctx.fillStyle = player.color;
     ctx.fillRect(topLeftX, topLeftY, player.width, player.height);
+
+    ctx.drawImage(humanImg, topLeftX, topLeftY, 50, 50);
 }
 
 // MS5
@@ -1718,9 +1600,26 @@ function drawAIPlayer() {
     //ctx.strokeStyle = player.color;
     ctx.fillRect(topLeftX, topLeftY, player.width, player.height);
 
+    ctx.drawImage(robotHeadImg, topLeftX, topLeftY, 50, 50);
+
     // write the current intended target id ot hte top left of hte palyer
-    ctx.fillStyle = 'black';
-    ctx.fillText(AIplayer.ID, topLeftX, topLeftY - 5);  
+
+    // ctx.fillStyle = 'black';
+    // ctx.fillText(AIplayer.ID, topLeftX, topLeftY - 5);  
+}
+
+function drawAIPlayerOffline() {
+    let topLeftX = AIplayer_offline.x - AIplayer_offline.width / 2;
+    let topLeftY = AIplayer_offline.y - AIplayer_offline.height / 2;
+
+    ctx.fillStyle = AIplayer_offline.color;
+    //ctx.strokeStyle = player.color;
+    ctx.fillRect(topLeftX, topLeftY, player.width, player.height);
+
+    // write the current intended target id ot hte top left of hte palyer
+
+    // ctx.fillStyle = 'black';
+    // ctx.fillText(AIplayer.ID, topLeftX, topLeftY - 5);  
 }
 
 // Function to draw objects
@@ -1755,53 +1654,42 @@ function drawCompositeShapeAI(obj) {
     drawCircle(obj.x, obj.y, obj.fill, 'gray' ); // Inner circle, smaller radius
 }
 
-// function drawCompositeShapeAI(obj) {
-//      // If the object is clicked, draw a green highlight around it.
-//     //  if (obj.marked && !player.toCenter){
-//     //     let ringColor = 'red';//  'rgb(76, 187, 23)';
-//     //     let ringRadius = obj.size + 5;
-//     //     drawCircle(obj.x, obj.y,ringRadius, ringColor); 
-//     //     // drawTargetMarker(obj.x, obj.y, obj.size + 5, 5, 10);
-//     // } 
-
-//     // Draw the outer circle first
-//     drawCircle(obj.x, obj.y, obj.size, obj.outerColor); // Outer circle
-
-//     // Then draw the inner circle on top
-//     drawCircle(obj.x, obj.y, obj.fill, obj.innerColor); // Inner circle, smaller radius
-// }
-
 function drawCompositeShape(obj) {
+    // If the object is clicked, draw a green highlight around it.
+    if (obj.marked && obj.AImarked && settings.AICollab == 0){
+        let offset = true;
+        if (!player.toCenter){
+            let type = 'player';
+            drawTargetMarker(obj.x, obj.y, obj.size + 2, obj.size + 12, 10, type);
+        } else{
+            offset = false;
+        }
 
-    // If both the AI and the Player marked the same object in the naive condition
-    if (obj.marked && obj.AImarked){
-        let AIringColor = AIplayer.color;//  'rgb(76, 187, 23)';
-        let playerRingColor = player.color;
-        let AIringRadius = obj.size + 5;
-        let playerRingRadius = obj.size + 10;
-        drawRing(obj.x, obj.y,AIringRadius, AIringColor, 'dashed');
-        drawRing(obj.x, obj.y,playerRingRadius, playerRingColor);
+        let type = 'AI';
+        if (offset){
+            drawTargetMarker(obj.x, obj.y, obj.size + 2, obj.size + 12, 10, type, Math.PI/4);
+        } else {
+            drawTargetMarker(obj.x, obj.y, obj.size + 2, obj.size + 12, 10, type);
+        }
     }
 
-    // If the player marked the object
-    if (obj.marked && !player.toCenter && !obj.AImarked){
-        let ringColor = player.color;//  'rgb(76, 187, 23)';
-        let ringRadius = obj.size + 5;
-        drawCircle(obj.x, obj.y,ringRadius, ringColor); 
-        // drawTargetMarker(obj.x, obj.y, obj.size + 5, 5, 10);
-    } 
-
-    // If the AI marked the object
     if (obj.AImarked && !obj.marked){
         let ringColor = AIplayer.color;//  'rgb(76, 187, 23)';
         let ringRadius = obj.size + 5;
-        drawCircle(obj.x, obj.y,ringRadius, ringColor); 
-        // drawTargetMarker(obj.x, obj.y, obj.size + 5, 5, 10);
+        // drawCircle(obj.x, obj.y,ringRadius, ringColor); 
+        let offset = true;
+        let type = 'AI';
+        drawTargetMarker(obj.x, obj.y, obj.size + 2, obj.size + 12, 10, type, Math.PI/4);
     } 
 
-    if (DEBUG) drawDebugID(obj);
+    if (obj.marked && !obj.AImarked && !player.toCenter){
+        let type = 'player';
+        drawTargetMarker(obj.x, obj.y, obj.size + 2, obj.size + 12, 10, type);
+    }
 
-    if (obj.willOverlap && DEBUG) drawDebugOverlap(obj, obj.willOverlap);
+    // if (obj.willOverlap && DEBUG) drawDebugOverlap(obj, obj.willOverlap);
+
+    // if (DEBUG) drawDebugID(obj);   
 
     // Draw the outer circle first
     drawCircle(obj.x, obj.y, obj.size, obj.outerColor); // Outer circle
@@ -1846,35 +1734,72 @@ function drawRing(x, y, radius, color, style = 'solid') {
     ctx.closePath();
 }
 
+function drawDebugID(obj) {
+    // set the text color
+    ctx.fillStyle = 'black';
+    // set the font
+    ctx.font = '16px Arial';
+    // draw the ID above the object
+    ctx.fillText(obj.ID, obj.x, obj.y - 20);
+}
+
 function drawCenterMarker(centerX=400, centerY=400, radius=10, color = "rgba(128, 128, 128, 0.5)"){
     if (player.toCenter) drawCircle(centerX, centerY, 
                                     radius + 5,'red');
-
-    if (AIplayer.ID == -1) drawCircle(centerX, centerY, radius + 5, 'green');
+    if (AIplayer.toCenter) drawCircle(centerX, centerY,
+                                    radius + 5, AIplayer.color);
     drawCircle(centerX, centerY, radius, color);
 }
 
-function drawTargetMarker(centerX, centerY, radius, triangleHeight =  5, triangleBase = 10) {
-    const angles = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]; // angles for the 4 triangles
+function drawTargetMarker(centerX, centerY, radius1, radius2, triangleBase = 5, type, offset =0) {
+    const context = document.querySelector('canvas').getContext('2d'); // Assuming there's a canvas element in your HTML
+    const angles = [0 + offset, Math.PI / 2 + offset, Math.PI + offset, (3 * Math.PI) / 2 + offset]; // angles for the 4 triangles
+    const triangleHeight = radius2 - radius1; // Calculate the height of the triangles
 
-    ctx.save();
-    ctx.fillStyle = 'red';
+    context.save();
+    // ctx.fillStyle = color;
+    if (type == 'player') ctx.fillStyle = 'red';
+
+    // AI Players have their own marker colors by collab type and the game condition
+    if ((type == 'AI') && settings.AICollab == 0 && settings.maxTargets == 5) ctx.fillStyle = 'green';
+    if ((type == 'AI') && settings.AICollab == 1 && settings.maxTargets == 5) ctx.fillStyle = 'purple';
+    if ((type == 'AI') && settings.AICollab == 0 && settings.maxTargets == 15) ctx.fillStyle = 'blue';
+    if ((type == 'AI') && settings.AICollab == 1 && settings.maxTargets == 15) ctx.fillStyle = 'rgba(176, 97, 23)';// 'rgba(184, 115, 51)';
 
     angles.forEach((angle) => {
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
+        const tipX = centerX + radius1 * Math.cos(angle);
+        const tipY = centerY + radius1 * Math.sin(angle);
+        const baseX1 = centerX + radius2 * Math.cos(angle) - triangleBase / 2 * Math.sin(angle);
+        const baseY1 = centerY + radius2 * Math.sin(angle) + triangleBase / 2 * Math.cos(angle);
+        const baseX2 = centerX + radius2 * Math.cos(angle) + triangleBase / 2 * Math.sin(angle);
+        const baseY2 = centerY + radius2 * Math.sin(angle) - triangleBase / 2 * Math.cos(angle);
 
         // Draw a triangle
         ctx.beginPath();
-        ctx.moveTo(x, y - triangleHeight / 2);
-        ctx.lineTo(x + triangleBase / 2, y + triangleHeight / 2);
-        ctx.lineTo(x - triangleBase / 2, y + triangleHeight / 2);
+        ctx.moveTo(tipX, tipY);
+        ctx.lineTo(baseX1, baseY1);
+        ctx.lineTo(baseX2, baseY2);
         ctx.closePath();
         ctx.fill();
+
+        // // Draw the black border
+        // ctx.strokeStyle = 'black';
+        // ctx.lineWidth = 1;
+        // ctx.stroke();   
     });
 
     ctx.restore();
 }
+
+// Function to draw the robot head at AIplayer location
+function drawRobotHead(ctx) {
+    // const robotHeadWidth = 10;
+    // const robotHeadHeight = 10;
+
+    // Draw the robot head image at AIplayer's x, y coordinates
+    ctx.drawImage(robotHeadImg, AIplayer.x, AIplayer.y, robotHeadWidth, robotHeadHeight);
+}
+
 
 function drawDebugOverlap(obj, willOverlap) {
     ctx.save();
@@ -1886,57 +1811,6 @@ function drawDebugOverlap(obj, willOverlap) {
     ctx.strokeRect(obj.x - size/2, obj.y - size/2, size, size);
     ctx.restore();
 }
-
-function drawDebugID(obj) {
-     // set the text color
-     ctx.fillStyle = 'black';
-     // set the font
-     ctx.font = '16px Arial';
-     // draw the ID above the object
-     ctx.fillText(obj.ID, obj.x, obj.y - 20);
-}
-
-function arraysAreIdentical(arr1, arr2) {
-    if (arr1.length !== arr2.length) return false;
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i] !== arr2[i]) return false;
-    }
-    return true;
-}
-
-// function drawTargetMarker(centerX, centerY, radius, triangleHeight = 10, triangleBase = 20) {
-//     const angles = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]; // angles for the 4 triangles
-
-//     ctx.save();
-//     ctx.fillStyle = 'red';
-
-//     angles.forEach((angle) => {
-//         const x = centerX + radius * Math.cos(angle);
-//         const y = centerY + radius * Math.sin(angle);
-
-//         // Draw a triangle
-//         ctx.beginPath();
-//         ctx.moveTo(x - triangleBase / 2 * Math.cos(angle), y - triangleBase / 2 * Math.sin(angle));
-//         ctx.lineTo(x + triangleHeight * Math.cos(angle + Math.PI / 2), y + triangleHeight * Math.sin(angle + Math.PI / 2));
-//         ctx.lineTo(x + triangleBase / 2 * Math.cos(angle), y + triangleBase / 2 * Math.sin(angle));
-//         ctx.closePath();
-//         ctx.fill();
-//     });
-
-//     ctx.restore();
-// }
-
-// Function that draws one thick ring in around the center of the game
-
-// function drawRing(centerX=400, centerY=400, radius=200, thickness=120){
-//     ctx.save();
-//     ctx.beginPath();
-//     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-//     ctx.lineWidth = thickness;
-//     ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-//     ctx.stroke();
-//     ctx.restore();
-// }  
 
 function drawVelocityVector(obj) {
     if (isWithinCanvas(obj)) {
@@ -1976,10 +1850,14 @@ function drawDebugBounds(obj) {
 
 function drawScore() {
     scoreCtx.clearRect(0, 0, scoreCanvas.width, scoreCanvas.height); // Clear the score canvas
-    scoreCtx.font = '16px Roboto';
+    scoreCtx.font = '18px Roboto';
     scoreCtx.fillStyle = 'black'; // Choose a color that will show on your canvas
-    scoreCtx.fillText('Score: ' + score, 10, 20); // Adjust the positioning as needed
-    scoreCtx.fillText('AI Score: ' + AIplayer.score, 10, 40); // Adjust the positioning as needed
+    totalScore = player.score + AIplayer.score;``
+    scoreCtx.fillText('Team Score: ' + totalScore, 10, 20); // Adjust the positioning as needed
+    // add a new line space between this right and the next
+    scoreCtx.font = '14px Roboto';
+    scoreCtx.fillText('Player: ' + score, 10, 40); // Adjust the positioning as needed
+    scoreCtx.fillText('Bot: ' + AIplayer.score, 10, 60); // Adjust the positioning as needed
 }
 
 function drawCursor(x, y) {
@@ -2221,7 +2099,6 @@ function drawAISolution() {
             }
             */
 
-
             if (settings.AIDisplayMode==2) {
                 // Highlight the target interception sequence 
                 ctx.save();
@@ -2249,9 +2126,7 @@ function drawAISolution() {
                 ctx.stroke();
                 ctx.restore();
             }
-
         }
-        
     }
 
     // MS7
@@ -2260,6 +2135,7 @@ function drawAISolution() {
     if (showIDs) {
         let numObjects = objects.length;
         for (let i=0; i<numObjects; i++) {
+            // only draw the objects that are not intercepted
             if (objects[i].intercepted == false) {
                 let index = objects[i].ID;
                 let targetX = objects[i].x;
@@ -2383,28 +2259,43 @@ function drawFilledArrow(ctx, toX, toY, arrowWidth) {
     ctx.fill();
 }
 
-// Messaging board status
-function displayAIstatus(){
-    if (settings.AIMode == 0 && !falseAlarmFlag && !missFlag) {
-        // document.getElementById("aiModeStatus").textContent = "AI is OFF";
-        // document.getElementById("aiModeStatus").style.color = "white";
-        // document.getElementById("aiModeStatus").style.backgroundColor = "rgba(255, 0, 0, 0.8)";
-        // document.getElementById("aiAssistRobot").style.opacity = "0.5";
-        document.getElementById("aiAssistRobotCaption").style.opacity = "0.5";
-        document.getElementById("aiAssistRobotCaption").style.backgroundColor =  "yellow"; // semi-transparent green
-        document.getElementById("aiAssistRobotCaption").textContent = "Hi! Reminders will appear here.";
-    } else if (settings.AIMode == 0 && !falseAlarmFlag && !missFlag) {
-        // document.getElementById("aiModeStatus").textContent = "AI is ON";
-        // document.getElementById("aiModeStatus").style.color = "white";
-        // document.getElementById("aiModeStatus").style.backgroundColor =  "rgba(0, 128, 0, 0.8)"; // semi-transparent green
-        // document.getElementById("aiAssistRobot").style.opacity = "1";
-        document.getElementById("aiAssistRobotCaption").style.opacity = "1";
-        document.getElementById("aiAssistRobotCaption").textContent = "Hi! Reminders will appear here.";
-    } else if (falseAlarmFlag || missFlag){
-        document.getElementById("aiAssistRobotCaption").style.backgroundColor =  "pink"; // semi-transparent green
-        document.getElementById("aiAssistRobotCaption").style.opacity = "1";
-        document.getElementById("aiAssistRobotCaption").textContent = "Remember to press the spacebar only when the pink light flashes";
-    }
+// Messaging board status + AI image type
+
+function displayAIStatus() {
+    const aiAssistRobot = document.getElementById("aiAssistRobot");
+    const aiAssistRobotCaption = document.getElementById("aiAssistRobotCaption");
+
+    let curMaxTargets = settings.maxTargets;
+
+    if (settings.AICollab == 0 && curMaxTargets == 5) {
+        aiAssistRobot.src = "./images/simple-robot-line-removebg-preview.png";
+        aiAssistRobot.style.backgroundColor = AIplayer.color;
+        aiAssistRobotCaption.textContent = "Hi there! I'm Green-Bot. I'll be controlling the green square.";
+        aiAssistRobotCaption.style.opacity = "1";
+        aiAssistRobotCaption.style.backgroundColor = AIplayer.color;; // Semi-transparent green
+        aiAssistRobotCaption.style.fontWeight = "bold";
+    } else if (settings.AICollab == 1 && curMaxTargets == 5) {
+        aiAssistRobot.src = "./images/simple-robot-line-removebg-preview.png";
+        aiAssistRobot.style.backgroundColor = AIplayer.color;
+        aiAssistRobotCaption.textContent = "Howdy! I'm Purple-Bot. I'll be controlling the purple square.";
+        aiAssistRobotCaption.style.opacity = "1";
+        aiAssistRobotCaption.style.backgroundColor = "rgba(128, 0, 128, 0.5)"; // Semi-transparent purple
+        aiAssistRobotCaption.style.fontWeight = "bold";
+    } else if (settings.AICollab == 0 && curMaxTargets == 15) {
+        aiAssistRobot.src = "./images/simple-robot-line-removebg-preview.png";
+        aiAssistRobot.style.backgroundColor = AIplayer.color;
+        aiAssistRobotCaption.textContent = "Ahoy! I'm Blue-Bot. I'll be controlling the blue square.";
+        aiAssistRobotCaption.style.opacity = "1";
+        aiAssistRobotCaption.style.backgroundColor = AIplayer.color;; // Semi-transparent brown
+        aiAssistRobotCaption.style.fontWeight = "bold";
+    } else if (settings.AICollab == 1 && curMaxTargets == 15) {
+        aiAssistRobot.src = "./images/simple-robot-line-removebg-preview.png";
+        aiAssistRobot.style.backgroundColor = AIplayer.color;
+        aiAssistRobotCaption.textContent = "G'day! I'm Copper-Bot. I'll be controlling the copper-colored square.";
+        aiAssistRobotCaption.style.opacity = "1";
+        aiAssistRobotCaption.style.backgroundColor = AIplayer.color; // Semi-transparent blue
+        aiAssistRobotCaption.style.fontWeight = "bold";
+    } 
 }
 
 function drawLight(randChoice) {
@@ -2472,7 +2363,7 @@ function showCustomAlert(message) {
 function closeCustomAlert() {
     document.getElementById('customAlert').style.display = 'none';
 }
-// ***************************************** INTERCEPTION ALGO (NEW) ***************************************** //
+// *************************************** INTERCEPTION ALGORITHMS ********************************** //
 // Intercept Function for the Player
 function attemptInterceptLocal(playerPosX, playerPosY, playerSpeed, objectPosX, objectPosY, objectVelX, objectVelY, circleRadius) {
     let success = false;
@@ -2527,13 +2418,14 @@ function attemptInterceptLocal(playerPosX, playerPosY, playerSpeed, objectPosX, 
 
     if ((travelTime == null) | (interceptPosX== null) | ( interceptPosX==null) |
        (totalDistanceTraveled == null) | (success==null)) {
-        console.log( 'Null values');
+        if (DEBUG) console.log( 'Null values');
     }
 
     return [ success, travelTime, interceptPosX, interceptPosY, totalDistanceTraveled ];
 }
 
-function willSquareAndCircleOverlap(x1, y1, vx1, vy1, r1, x2, y2, vx2, vy2, r2) {
+// Prediction of interception accross all targets
+function willSquareAndCircleOverlap(x1, y1, vx1, vy1, r1, x2, y2, vx2, vy2, r2, timeToIntercept) {
     // Function to calculate the square's corners at time t
     function getSquareCorners(x, y, r, t) {
         const halfR = r / 2;
@@ -2558,8 +2450,7 @@ function willSquareAndCircleOverlap(x1, y1, vx1, vy1, r1, x2, y2, vx2, vy2, r2) 
 
     // Check overlap at time t
     function checkOverlap(t) {
-
-        if (t > player.timeToIntercept) return false;
+        if (t < 0 || t > timeToIntercept) return false;
 
         const circle = getCircleCenter(x2, y2, t);
         const squareCorners = getSquareCorners(x1, y1, r1, t);
@@ -2585,8 +2476,6 @@ function willSquareAndCircleOverlap(x1, y1, vx1, vy1, r1, x2, y2, vx2, vy2, r2) 
             vx: edge.vx,
             vy: edge.vy
         }));
-
-        
 
         for (const edge of squareEdges) {
             const t0 = ((circle.x - edge.x) * edge.vx + (circle.y - edge.y) * edge.vy) / (edge.vx * edge.vx + edge.vy * edge.vy);
@@ -2614,13 +2503,11 @@ function willSquareAndCircleOverlap(x1, y1, vx1, vy1, r1, x2, y2, vx2, vy2, r2) 
     const t1 = (-b - Math.sqrt(discriminant)) / (2 * a);
     const t2 = (-b + Math.sqrt(discriminant)) / (2 * a);
 
-    // add a check that if the player is going to stop before the overlap point, then return false
-
-    // Check if overlap occurs at any potential time points
+    // Check if overlap occurs at any potential time points within the stopping time
     return checkOverlap(t1) || checkOverlap(t2) || checkOverlap(0);
 }
 
-// *************************************************** EVENT LISTENERS *************************************************** //
+// ***************************************** EVENT LISTENERS ***************************************** //
 let lastClickedObj = null;
 $(document).ready( function(){
    // Event listener for player click locations
@@ -2630,8 +2517,6 @@ $(document).ready( function(){
         const rect   = canvas.getBoundingClientRect();
         const clickX = event.clientX - rect.left;
         const clickY = event.clientY - rect.top;
-        // player.targetX = clickX;
-        // player.targetY = clickY;
 
         // Calculate the angle from the player to the click position
         const deltaX = clickX - (player.x + player.width / 2);
@@ -2652,7 +2537,7 @@ $(document).ready( function(){
 
         // Extract the game state for the click and then ush into the playerClicks dataframe
         let gameSnapshot = extractGameState(objects);
-        if (DEBUG) console.log('gameSnapshot:', gameSnapshot);  
+        // if (DEBUG) console.log('gameSnapshot:', gameSnapshot);  
 
         // check if player clicked on a target
         for (let i = 0; i < objects.length; i++) {
@@ -2699,7 +2584,7 @@ $(document).ready( function(){
 
                 // (Sanity Check) Only in the case that the object speed is beyond the player speed 
                 if (totalDistanceTraveled == Infinity){
-                    console.log('No interception possible');
+                    if (DEBUG) console.log('No interception possible');
                     objects[i].innerColor = 'red'
                 }
                 
@@ -2708,7 +2593,7 @@ $(document).ready( function(){
                                     x: objects[i].x, y: objects[i].y,
                                     dx: objects[i].dx, dy: objects[i].dy,
                                     vx: objects[i].vx, vy: objects[i].vy, speed: objects[i].speed,
-                                    clicked: objects[i].clicked, marked: objects[i].marked};
+                                    clicked: objects[i].clicked, marked: objects[i].marked, AImarked: objects[i].AImarked};
 
                 let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
                                     dx: player.dx, dy: player.dy,
@@ -2718,22 +2603,19 @@ $(document).ready( function(){
 
                 let interceptData   = {x: interceptPosX, y: interceptPosY, time: travelTime, distance: totalDistanceTraveled,  
                                         intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
                 let eventType       = 'clickObject';
 
                 // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: playerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
-                                    gameState: gameSnapshot};
+                                    interceptData: interceptData, gameState: gameSnapshot};
 
                 eventStream.push(eventObject)
 
-                if (DEBUG) console.log('Object Click eventObject:', eventObject);
+                // if (DEBUG) console.log('Object Click eventObject:', eventObject);
                 
-                // removed the playerClicks dataframe
-
-                break;
+                // break;
             }  
             // if click is around the center, then allow movement there
             if ( isClickOnCenter(clickX,clickY) ) {
@@ -2742,7 +2624,7 @@ $(document).ready( function(){
                 player.moving = true;
                 player.toCenter = true;
 
-                let eventType       = 'clickObject';
+                let eventType       = 'clickCenter';
                 // let objectData      = 0;
 
                 let objectData      = {ID:0, value:0,
@@ -2757,17 +2639,16 @@ $(document).ready( function(){
                                     angle: player.angle, moving: player.moving,
                                     score:player.score, AIscore: AIplayer.score};
                 let interceptData   = null;
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
 
                 // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: playerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
-                                    gameState: gameSnapshot};
+                                    interceptData: interceptData, gameState: gameSnapshot};
 
                 eventStream.push(eventObject)
 
-                if (DEBUG) console.log('Center Click eventObject:', eventObject);
+                // if (DEBUG) console.log('Center Click eventObject:', eventObject);
 
             } else{
                 player.toCenter = false;
@@ -2788,35 +2669,37 @@ async function runGameSequence(message) {
     isPaused = false;
 }
 
-window.addEventListener('keydown', function(event) {
-    if (event.code === 'Space' && isLightOn) {
-        isLightOn = false;
+// Commented out the event listener for the DRT task
+// window.addEventListener('keydown', function(event) {
+//     if (event.code === 'Space' && isLightOn) {
+//         isLightOn = false; 
 
-        responseTime = frameCountGame - drtInitFrame;
+//         responseTime = frameCountGame - drtInitFrame;
         
-        // console.log("DRT Response: " + deltaResponse);  
-        let response = {frame: frameCountGame, delta: responseTime, initFrame: drtInitFrame, valid: true};
+//         // console.log("DRT Response: " + deltaResponse);  
+//         let response = {frame: frameCountGame, delta: responseTime, initFrame: drtInitFrame, valid: true};
 
-        if (DEBUG) console.log("DRT Response:", response);
+//         if (DEBUG) console.log("DRT Response:", response);
 
-        if (responseTime < drtMissLow){
-            response.valid = false;
-        }
+//         if (responseTime < drtMissLow){
+//             response.valid = false;
+//         }
 
-        drtResponses.push(response);
+//         drtResponses.push(response);
         
-    } else if(event.code === 'Space' && !isLightOn) {
-        if (DEBUG) console.log("False Alarm DRT Response: ");  
+//     } else if(event.code === 'Space' && !isLightOn) {
+//         if (DEBUG) console.log("False Alarm DRT Response: ");  
 
-        // counter to limit warning caption, set false alarm flag to trigger caption change
-        counter = 0;
-        falseAlarmFlag = true;
+//         // counter to limit warning caption, set false alarm flag to trigger caption change
+//         counter = 0;
+//         falseAlarmFlag = true;
 
-        // push to the false alarm array the time of the flase alarm
-        let response = {frame: frameCountGame};
-        drtFalseAlarm.push(response);
-    }
-});
+//         // push to the false alarm array the time of the flase alarm
+//         let response = {frame: frameCountGame};
+//         drtFalseAlarm.push(response);
+//     }
+// });
+
 
 // Toggle AI assistance function
 function toggleAIAssistance() {
@@ -2889,6 +2772,287 @@ function distractorCaught(obj){
     console.log("Distractor pushed into array.");
 }   
 
+//***************************************************** AI COMPARISON ***************************************************//
+
+// async function loadAIComparison() {
+//     var DEBUG_SURVEY = DEBUG;
+
+//     // Survey Information
+//     var TOPIC_AI_COMPARISON_DICT = {
+//         "selectedAI": null,
+//     };
+
+//     // Clear previous inputs
+//     $('#ai-1-button').removeClass('btn-selected');
+//     $('#ai-2-button').removeClass('btn-selected');
+//     $('#survey-complete-button-comparison').prop('disabled', true);
+
+//     $(document).ready(function () {
+//         function handleAISelection() {
+//             /*
+//                 Radio Button Selection Controller.
+
+//                 Only one AI option can be selected.
+//                 Enable the submit button once an AI is selected.
+//             */
+//             // Retrieve the current AI that was selected
+//             let selectedAI = $(this).attr("id");
+
+//             if (selectedAI === 'ai-1-button') {
+//                 $('#ai-1-button').addClass('btn-selected');
+//                 $('#ai-2-button').removeClass('btn-selected');
+//                 TOPIC_AI_COMPARISON_DICT["selectedAI"] = "AI 1";
+//             } else {
+//                 $('#ai-2-button').addClass('btn-selected');
+//                 $('#ai-1-button').removeClass('btn-selected');
+//                 TOPIC_AI_COMPARISON_DICT["selectedAI"] = "AI 2";
+//             }
+
+//             // Enable the submit button
+//             $('#survey-complete-button-comparison').prop('disabled', false);
+
+//             if (DEBUG_SURVEY) {
+//                 console.log("AI Button Selected\n:", "Value :", TOPIC_AI_COMPARISON_DICT["selectedAI"]);
+//             }
+//         }
+
+//         async function completeExperiment() {
+//             /*
+//                 When submit button is clicked, the experiment is done.
+
+//                 This will submit the final selection and then load the
+//                 "Experiment Complete" page.
+//             */
+//             let SURVEY_END_TIME = new Date();
+
+//             // Write to database based on the number of surveys completed
+//             numSurveyCompleted++;
+//             // AIComparisonComplete = True
+            
+//             if (numSurveyCompleted == 1) {
+//                 let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/AIcomparison1' ;
+//                 await writeRealtimeDatabase(db1, path, TOPIC_AI_COMPARISON_DICT);
+//                 $("#ai-comparison-container").attr("hidden", true);
+//                 // $("#full-game-container").attr("hidden", false);
+//                 $("#ai-open-ended-feedback-container").attr("hidden", false);
+//                 loadAIopenEndedFeedback(numSurveyCompleted);
+                
+//             } else if (numSurveyCompleted == 2) {
+//                 let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/AIcomparison2' ;
+//                 await writeRealtimeDatabase(db1, path, TOPIC_AI_COMPARISON_DICT);
+//                 $("#ai-comparison-container").attr("hidden", true);
+//                 // $("#full-game-container").attr("hidden", false);
+//                 $("#ai-open-ended-feedback-container").attr("hidden", false);
+//                 loadAIopenEndedFeedback(numSurveyCompleted);
+//                 // push them to the final page of the experiment which redirects participants
+//                 // await runGameSequence("Congratulations on Finishing the Main Experiment! Click OK to Continue to the Feedback Survey.");
+//                 // finalizeBlockRandomization(db1, studyId, currentCondition);
+//                 // // finalizeBlockRandomization(db1, studyId, curSeeds);
+//                 // $("#ai-comparison-container").attr("hidden", true);
+//                 // $("#task-header").attr("hidden", true);
+//                 // $("#exp-complete-header").attr("hidden", false);
+//                 // $("#complete-page-content-container").attr("hidden", false);
+//                 // await loadCompletePage();
+//                 // $('#task-complete').load('html/complete.html');
+//             } 
+//         }
+
+//         // Handle AI selection for both buttons
+//         $('#ai-1-button').click(handleAISelection);
+//         $('#ai-2-button').click(handleAISelection);
+
+//         // Handle submitting survey
+//         $('#survey-complete-button-comparison').off().click(completeExperiment);
+//     });
+// }
+
+async function loadAIComparison() {
+    var DEBUG_SURVEY = DEBUG;
+
+    // Survey Information
+    var TOPIC_AI_COMPARISON_DICT = {
+        "selectedAI": null,
+    };
+
+    // Clear previous inputs
+    // Clear previous inputs and classes
+    $('#ai-1-button').removeClass('robot-button-selected robot-button-iron robot-button-copper robot-button-green robot-button-purple robot-button-brown robot-button-blue');
+    $('#ai-2-button').removeClass('robot-button-selected robot-button-iron robot-button-copper robot-button-green robot-button-purple robot-button-brown robot-button-blue');
+    $('#survey-complete-button-comparison').prop('disabled', true);
+    // $('#ai-1-button').removeClass('robot-button-selected');
+    // $('#ai-2-button').removeClass('robot-button-selected');
+    // $('#survey-complete-button-comparison').prop('disabled', true);
+
+     // max targets is 55 first, then 15
+     if (visitedBlocks == 1 && currentCondition <= 4) { // takse us to the correct survey ... 
+        $('#ai-1-button').addClass('robot-button-green');
+        $('#ai-2-button').addClass('robot-button-purple');
+        $('#ai-1-button').next('figcaption').text('Green-Bot');
+        $('#ai-2-button').next('figcaption').text('Purple-Bot');
+    } else if (visitedBlocks == 2 && currentCondition <= 4 ) {
+        // $('#ai-1-button').addClass('robot-button-iron');
+        $('#ai-1-button').addClass('robot-button-blue');
+        $('#ai-2-button').addClass('robot-button-copper');
+        $('#ai-1-button').next('figcaption').text('Blue-Bot');
+        $('#ai-2-button').next('figcaption').text('Copper-Bot');
+    }
+
+    // max targets is 15 first, then 5
+    if (visitedBlocks == 1 && currentCondition > 4) { // takes us to the correct survey
+        // $('#ai-1-button').addClass('robot-button-iron');
+        $('#ai-1-button').addClass('robot-button-blue');
+        $('#ai-2-button').addClass('robot-button-copper');
+        $('#ai-1-button').next('figcaption').text('Blue-Bot');
+        $('#ai-2-button').next('figcaption').text('Copper-Bot');
+    } else if (visitedBlocks == 2 && currentCondition > 4) {
+        $('#ai-1-button').addClass('robot-button-green');
+        $('#ai-2-button').addClass('robot-button-purple');
+        $('#ai-1-button').next('figcaption').text('Green-Bot');
+        $('#ai-2-button').next('figcaption').text('Purple-Bot');
+    }
+
+
+    $(document).ready(function () {
+       
+
+        function handleAISelection() {
+            /*
+                Image Button Selection Controller.
+
+                Only one AI option can be selected.
+                Enable the submit button once an AI is selected.
+            */
+            // Retrieve the current AI that was selected
+            let selectedAI = $(this).attr("id");
+
+            if (selectedAI === 'ai-1-button') {
+                $('#ai-1-button').addClass('robot-button-selected');
+                $('#ai-2-button').removeClass('robot-button-selected');
+                TOPIC_AI_COMPARISON_DICT["selectedAI"] = "ignorant";
+            } else {
+                $('#ai-2-button').addClass('robot-button-selected');
+                $('#ai-1-button').removeClass('robot-button-selected');
+                TOPIC_AI_COMPARISON_DICT["selectedAI"] = "rules";
+            }
+
+            // Enable the submit button
+            $('#survey-complete-button-comparison').prop('disabled', false);
+
+            if (DEBUG) {
+                console.log("AI Button Selected\n:", "Value :", TOPIC_AI_COMPARISON_DICT["selectedAI"]);
+            }
+        }
+
+        async function completeExperiment() {
+            /*
+                When submit button is clicked, the experiment is done.
+
+                This will submit the final selection and then load the
+                "Experiment Complete" page.
+            */
+            let SURVEY_END_TIME = new Date();
+
+            // Write to database based on the number of surveys completed
+            numSurveyCompleted++;
+            // AIComparisonComplete = True
+            
+            if (numSurveyCompleted == 1) {
+                let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/AIcomparison1' ;
+                await writeRealtimeDatabase(db1, path, TOPIC_AI_COMPARISON_DICT);
+                $("#ai-comparison-container").attr("hidden", true);
+                // $("#full-game-container").attr("hidden", false);
+                $("#ai-open-ended-feedback-container").attr("hidden", false);
+                loadAIopenEndedFeedback(numSurveyCompleted);
+                
+            } else if (numSurveyCompleted == 2) {
+                let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/AIcomparison2' ;
+                await writeRealtimeDatabase(db1, path, TOPIC_AI_COMPARISON_DICT);
+                $("#ai-comparison-container").attr("hidden", true);
+                // $("#full-game-container").attr("hidden", false);
+                $("#ai-open-ended-feedback-container").attr("hidden", false);
+                loadAIopenEndedFeedback(numSurveyCompleted);
+                // push them to the final page of the experiment which redirects participants
+                // await runGameSequence("Congratulations on Finishing the Main Experiment! Click OK to Continue to the Feedback Survey.");
+                // finalizeBlockRandomization(db1, studyId, currentCondition);
+                // // finalizeBlockRandomization(db1, studyId, curSeeds);
+                // $("#ai-comparison-container").attr("hidden", true);
+                // $("#task-header").attr("hidden", true);
+                // $("#exp-complete-header").attr("hidden", false);
+                // $("#complete-page-content-container").attr("hidden", false);
+                // await loadCompletePage();
+                // $('#task-complete').load('html/complete.html');
+            } 
+        }
+
+        // Handle AI selection for both buttons
+        $('#ai-1-button').click(handleAISelection);
+        $('#ai-2-button').click(handleAISelection);
+
+        // Handle submitting survey
+        $('#survey-complete-button-comparison').off().click(completeExperiment);
+    });
+}
+
+
+function loadAIopenEndedFeedback(numSurveyCompleted) {
+    var DEBUG_SURVEY = DEBUG;
+    // var numSurveyCompleted = 0; // Assuming this variable is defined somewhere in your global scope
+
+    $(document).ready(function () {
+        // Clear previous inputs
+        $('#ai-feedback-text').val('');
+        $('#submit-feedback-button').prop('disabled', true);
+
+        $('#ai-feedback-text').on('input', function () {
+            // Enable the submit button if there's any text in the feedback
+            if ($(this).val().trim() !== '') {
+                $('#submit-feedback-button').prop('disabled', false);
+            } else {
+                $('#submit-feedback-button').prop('disabled', true);
+            }
+        });
+
+        async function completeExperiment() {
+            /*
+                When submit button is clicked, submit the feedback and load the complete page.
+            */
+            let feedback = $('#ai-feedback-text').val().trim();
+            let feedbackData = {
+                feedback: feedback,
+                timestamp: new Date().toISOString()
+            };
+
+            // // Example of writing the feedback to the database
+            // let path = studyId + '/participantData/' + firebaseUserId1 + '/AIopenEndedFeedback';
+            // await writeRealtimeDatabase(db1, path, feedbackData);
+            
+            if (numSurveyCompleted == 1) {
+                let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/OpenEnded1' ;
+                await writeRealtimeDatabase(db1, path, feedbackData);
+            } else if (numSurveyCompleted == 2) {
+                let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/OpenEnded2' ;
+                await writeRealtimeDatabase(db1, path, feedbackData);
+            }
+
+            if (numSurveyCompleted == 2) {
+                // push them to the final page of the experiment which redirects participants
+                finalizeBlockRandomization(db1, studyId, currentCondition);
+                $("#ai-open-ended-feedback-container").attr("hidden", true);
+                $("#task-header").attr("hidden", true);
+                $("#exp-complete-header").attr("hidden", false);
+                $("#complete-page-content-container").attr("hidden", false);
+                await loadCompletePage();
+            } else {
+                $("#ai-open-ended-feedback-container").attr("hidden", true);
+                $("#full-game-container").attr("hidden", false);
+            }
+        }
+
+        // Handle submitting feedback
+        $('#submit-feedback-button').off().click(completeExperiment);
+    });
+}
+
 //**************************************************** SURVEY -- FULL ****************************************************//
 function loadFullSurvey(){
     var DEBUG_SURVEY = DEBUG;
@@ -2958,15 +3122,6 @@ function loadFullSurvey(){
                 }
             });
 
-           
-            // let feedbackText = grabFeedbackText();
-
-            // // Enable the submit button if all likert buttons have been clicked
-            // if (allClicked && feedbackText.length > 0) {
-            //     $('#survey-complete-button-full').prop('disabled', false);
-            //     // console.log("All topics ranked");
-            // }
-
             // Check if all likert buttons have been clicked and feedback text is not empty whenever an input changes
             $('.likert-topic-full li input, #survey-full-user-feedback-text').on('input', function() {
                 var allClicked = true;
@@ -2986,7 +3141,7 @@ function loadFullSurvey(){
                 }
             });
 
-            if (DEBUG_SURVEY) {
+            if (DEBUG) {
                 console.log(
                     "Radio Button Selected\n:",
                     "    Topic :", topic_currently_ranked,

@@ -23,7 +23,7 @@ $("#ai-comparison-container").attr("hidden", true);
 // Importing functions and variables from the FirebasePsych library
 import { writeRealtimeDatabase,writeURLParameters,readRealtimeDatabase,
     blockRandomization,finalizeBlockRandomization,
-    initializeRealtimeDatabase,initializeSecondRealtimeDatabase } from "./firebasepsych1.1.js";
+    initializeRealtimeDatabase,initializeSecondRealtimeDatabase } from "../js/firebasepsych1.1.js";
 
 // Define the configuration file for first database
 

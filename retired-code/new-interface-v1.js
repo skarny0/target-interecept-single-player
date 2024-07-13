@@ -22,7 +22,7 @@ $("#complete-page-content-container").attr("hidden", true);
 // Importing functions and variables from the FirebasePsych library
 import { writeRealtimeDatabase,writeURLParameters,readRealtimeDatabase,
     blockRandomization,finalizeBlockRandomization,
-    initializeRealtimeDatabase,initializeSecondRealtimeDatabase } from "./firebasepsych1.1.js";
+    initializeRealtimeDatabase,initializeSecondRealtimeDatabase } from "../js/firebasepsych1.1.js";
 
 // Define the configuration file for first database
 
@@ -37,7 +37,7 @@ const firebaseConfig_db1 = {
   };
 
 // Get the reference to the two databases using the configuration files
-//const [ db1 , firebaseUserId1 ] = await initializeRealtimeDatabase( firebaseConfig_db1 );
+const [ db1 , firebaseUserId1 ] = await initializeRealtimeDatabase( firebaseConfig_db1 );
 // const [ db2 , firebaseUserId2 ] = await initializeSecondRealtimeDatabase( firebaseConfig_db2 );
 
 // console.log("Firebase UserId=" + firebaseUserId);
@@ -50,26 +50,29 @@ function getDebugParams(){
 }
 
 var DEBUG  = getDebugParams();   // Always start coding in DEBUG mode
+var STATICOBJDEBUG = false; // Set to true to use static object locations for debugging
 
 let studyId = 'placeHolder';
 
 if (DEBUG){
-   studyId    = "uci-hri-experiment-drt-debug";
+   studyId    = "uci-hri-experiment-drt8-debug";
 } else {
-    studyId   = "uci-hri-experiment-drt";
+    studyId   = "uci-hri-experiment-drt8";
 }
 
 // WRITE PROLIFIC PARTICIPANT DATA TO DB1
-// let pathnow = studyId + '/participantData/' + firebaseUserId1 + '/participantInfo';
-// writeURLParameters(db1, pathnow);
+let pathnow = studyId + '/participantData/' + firebaseUserId1 + '/participantInfo';
+writeURLParameters(db1, pathnow);
 
 // database write function
 function writeGameDatabase(){
-
+    // Connecting to the sister database
     // let pathUID1 = studyId + '/participantData/' + firebaseUserId2 + '/keyUID';
     // let pathUID2 = studyId + '/participantData/' + firebaseUserId1 + '/keyUID';
     // writeRealtimeDatabase(db2, pathUID1, firebaseUserId1);
     // writeRealtimeDatabase(db1, pathUID2, firebaseUserId2);
+
+    if (DEBUG) console.log("Writing to database from block", currentBlock, "round", currentRound);
 
     // console.log("Writing to database");
     let path1   = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/spawnData';
@@ -87,6 +90,8 @@ function writeGameDatabase(){
     let path13  = studyId + '/participantData/' + firebaseUserId1 + '/condition' + '/seedCondition';
     let path14  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIClicks_Adjusted';
     let path15  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/DRTresponses';
+    let path16  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/DRTfalseAlarm';
+    let path17  = studyId + '/participantData/' + firebaseUserId1 + '/block' + currentBlock + '/round' + currentRound + '/AIeventStream';
 
     writeRealtimeDatabase(db1, path1, spawnData);
     writeRealtimeDatabase(db1, path2, caughtTargets);
@@ -103,6 +108,8 @@ function writeGameDatabase(){
     writeRealtimeDatabase(db1, path13, curSeeds);
     writeRealtimeDatabase(db1, path14, aiClicks_adjusted);
     writeRealtimeDatabase(db1, path15, drtResponses);
+    writeRealtimeDatabase(db1, path16, drtFalseAlarm);
+    writeRealtimeDatabase(db1, path17, AIeventStream);
 }
 
 //************************************************ ENVIRONMENT INITIALIZATION ********************************************//
@@ -112,7 +119,7 @@ const scoreCanvas = document.getElementById('scoreCanvas');
 const scoreCtx = scoreCanvas.getContext('2d');
 const world = { width: 800, height: 800 };
 const center = { x: canvas.width / 2, y: canvas.height / 2 };
-let observableRadius = 390; // Radius for positioning objects
+let observableRadius = 370; // Radius for positioning objects
 
 let roundSettings = {};
 
@@ -151,8 +158,9 @@ function getDifficultySettingsFromURL() {
 }
 
 let settings = {
-    maxSeconds: 30,             // maximum number of seconds per round
+    maxSeconds: 180,            // maximum number of seconds per round --> 3 minutes
     AIMode:1,                   // MS4: 0=no assistance; 1=always on; 2=adaptive
+    AICollab: 0,                // MS4: 0=ignorant; 1=intentional; 2=cognitive model
     alpha: 0.9,                 // MS8: discounting parameter for AI planner
     AIDisplayMode: 1,           // MS4: 0=show movement path; 1=show where to click; 2=show which targets to intercept
     AIMaxDisplayLength: 3,      // MS4: can be used to truncate the AI path length shown
@@ -163,52 +171,252 @@ let settings = {
     AIframeDelay: 30,           // Delaying advice so that it doesn't overwhelm the player
     spawnProbability:  1.0,
     spawnInterval: 10,
-    valueSkew: 1,
+    valueSkew: 2,
     valueLow: 0,
     valueHigh:  1,
     playerSpeed: 3,
-    maxTargets: 3,
+    maxTargets: 2,
     speedLow:  1.5,             // lowest end of object speed distribution
-    speedHigh: 3,               // highest end of object speed distribution
+    speedHigh: 2.99,               // highest end of object speed distribution
 };
+
+// let difficultySettings = {
+//     // CONDITION 1
+//     1: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2},  // MS7: minimum proportional improvement before recommendation changes,
+//             2: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2}},
+//         1: {1: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2},
+//             2: {AIMode: 0,
+//                 AIStabilityThreshold: 1.2}}},
+//     // CONDITION 2
+//     2: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2},
+//             2: {AIMode: 1, 
+//                 AIStabilityThreshold: 1.2}},
+//         1: {1: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2},
+//             2: {AIMode: 0,
+//                 AIStabilityThreshold: 1.2}}},
+//     // CONDITION 3
+//     3: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2},
+//             2: {AIMode: 0,
+//                 AIStabilityThreshold: 1.2}},
+//         1: {1: {AIMode: 1, 
+//                 AIStabilityThreshold: 1.2},
+//             2: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2}}},
+//     // CONDITION 4
+//     4: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2},
+//             2: {AIMode: 1, 
+//                 AIStabilityThreshold: 1.2}},
+//         1: {1: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2},
+//             2: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2}}},
+// };
+
+// let difficultySettings = {
+//     // CONDITION 1
+//     1: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 5},  // MS7: minimum proportional improvement before recommendation changes,
+//             2: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 5}},
+//         1: {1: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10},
+//             2: {AIMode: 0,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10}},
+//         2: {1: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15},
+//             2: {AIMode: 0,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15}}},
+//     // CONDITION 2
+//     2: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2, 
+//                 maxTargets: 10},
+//             2: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10}},
+//         1: {1: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10},
+//             2: {AIMode: 0,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10}}},
+//     // CONDITION 3
+//     3: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15},
+//             2: {AIMode: 0,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15}},
+//         1: {1: {AIMode: 0, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15},
+//             2: {AIMode: 0,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15}}},
+//     // CONDITION 4
+//     4: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 5},
+//             2: {AIMode: 1, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 5}},
+//         1: {1: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 5},
+//             2: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 5}}},
+//     // CONDITION 5
+//     5: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10},
+//             2: {AIMode: 1, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10}},
+//         1: {1: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10},
+//             2: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 10}}},
+//     // CONDITION 6
+//     6: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15},
+//             2: {AIMode: 1, 
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15}},
+//         1: {1: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15},
+//             2: {AIMode: 1,
+//                 AIStabilityThreshold: 1.2,
+//                 maxTargets: 15}}},
+// };
 
 let difficultySettings = {
     // CONDITION 1
     1: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2},  // MS7: minimum proportional improvement before recommendation changes,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5},  // MS7: minimum proportional improvement before recommendation changes,
             2: {AIMode: 0, 
-                AIStabilityThreshold: 1.2}},
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5}},
         1: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2},
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10},
             2: {AIMode: 0,
-                AIStabilityThreshold: 1.2}}},
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10}},
+        2: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15}}},
     // CONDITION 2
-    2: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2},
-            2: {AIMode: 1, 
-                AIStabilityThreshold: 1.2}},
+    2: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+                AIStabilityThreshold: 1.2, 
+                maxTargets: 5},
+            2: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5}},
         1: {1: {AIMode: 0, 
-                AIStabilityThreshold: 1.2},
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15},
             2: {AIMode: 0,
-                AIStabilityThreshold: 1.2}}},
-    // CONDITION 3
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15}},
+        2: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10}}},
     3: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2},
+                AIStabilityThreshold: 1.2, 
+                maxTargets: 10},
+            2: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10}},
+        1: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5},
             2: {AIMode: 0,
-                AIStabilityThreshold: 1.2}},
-        1: {1: {AIMode: 1, 
-                AIStabilityThreshold: 1.2},
-            2: {AIMode: 1,
-                AIStabilityThreshold: 1.2}}},
-    // CONDITION 4
-    4: {0: {1: {AIMode: 1,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
-                AIStabilityThreshold: 1.2},
-            2: {AIMode: 1, 
-                AIStabilityThreshold: 1.2}},
-        1: {1: {AIMode: 1,
-                AIStabilityThreshold: 1.2},
-            2: {AIMode: 1,
-                AIStabilityThreshold: 1.2}}}
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5}},
+        2: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15}}},
+    4: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+                AIStabilityThreshold: 1.2, 
+                maxTargets: 10},
+            2: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10}},
+        1: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15}},
+        2: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5}}},
+    5: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+                AIStabilityThreshold: 1.2, 
+                maxTargets: 15},
+            2: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15}},
+        1: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5}},
+        2: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10}}},
+    6: {0: {1: {AIMode: 0,                  // MS4: 0=no assistance; 1=always on; 2=adaptive
+                AIStabilityThreshold: 1.2, 
+                maxTargets: 15},
+            2: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 15}},
+        1: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 10}},
+        2: {1: {AIMode: 0, 
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5},
+            2: {AIMode: 0,
+                AIStabilityThreshold: 1.2,
+                maxTargets: 5}}},
 };
 
 function getPermutations(array) {
@@ -229,8 +437,10 @@ function getPermutations(array) {
     return permutations;
 }
 
-const seedSet = [12, 123, 1234, 12345];
-const permutedSeeds = getPermutations(seedSet);
+const seedSet = [12, 123, 1234, 12345, 123456, ];
+const maxTargetSet = [5, 10, 15];
+// const perumutedTargets = getPermutations(maxTargetSet);
+// console.log(perumutedTargets);
 
 // Block randomization variables -- placed here for ordering dependency
 let currentRound = 1;
@@ -238,7 +448,6 @@ let currentBlock = 0;
 let currentCondition = null;
 let curSeeds = null;   
 let noAssignment = true;
-
 
 let maxRounds = 2;
 let roundID = "round + " + currentRound;
@@ -251,11 +460,11 @@ let frameCountGame      = 0; // MS: number of updates of the scene
 let deltaFrameCount     = 0; // To limit the size of the Event Stream object; 
 const fps               = 30; // Desired logic updates per second
 let drtCount            = 0; // frame count for the DRT task for displaying the light
-let drtLightChoice      = 0;
+let drtLightChoice      = 0; // random choice of light to display
 
 let maxFrames = null;
 if (DEBUG){
-    maxFrames         = 30 * fps;// settings.maxSeconds * fps;
+    maxFrames         = 60 * fps;// settings.maxSeconds * fps;
 } else{ // set it to whatever you want
     maxFrames         = settings.maxSeconds * fps; //120 * 60; // Two minutes in frames
 }
@@ -289,8 +498,10 @@ let missFlag        = false;
 let drtMissCount    = 0;
 let counter = 0;
 
-const eventStreamSize = 720; // 2 minutes of 60 fps updates
-let eventStream = Array.from({ length: eventStreamSize }, () => ({}));// preallocate the array
+// const eventStreamSize = 720; // 2 minutes of 60 fps updates
+// let eventStream = Array.from({ length: eventStreamSize }, () => ({}));// preallocate the array
+let eventStream = [];
+let AIeventStream = [];
 
 // Variables for cursor
 let cursorSize = 40;
@@ -305,13 +516,17 @@ let numAIChanges = 0; // MS7 count of number of different targets pursued (measu
 const playerSize = 50;
 const player = {
     // color:"red", 
-    color: 'red',//'rgba(0, 0, 255, 0.5)',
+    color: 'rgba(255, 0, 0, 0.5)',//'rgba(0, 0, 255, 0.5)',
     x: canvas.width/2 , //center the x,y in the center of the player.
     y: canvas.height/2 ,
+    dx: 0,
+    dy: 0,
     moving:false,
+    toCenter:false,
     shownAdvice:false, //MS6: flag to show advice
     targetX:canvas.width/2,
     targetY:canvas.height/2,
+    targetObjID:0,
     velocity: 1.5,
     angle:0,
     speed: 1.5, 
@@ -356,9 +571,9 @@ let firstStepOffline, bestSolOffline, allSolOffline; // MS7  Global variable tha
 
 const AIplayerSize = 50;
 const AIplayer = {
-    color:'rgba(255, 0, 0, 0.5)', 
-    x: canvas.width/2 - playerSize/2, //center the x,y in the center of the player.
-    y: canvas.height/2 - playerSize/2,
+    color: 'rgba(0, 128, 0, 0.5)',//'rgba(255, 0, 0, 0.5)', 
+    x: canvas.width/2 + 150, //center the x,y in the center of the player.
+    y: canvas.height/2 + 150,
     moving:false,
     targetX:0,
     targetY:0,
@@ -374,6 +589,27 @@ let AIplayerLocation = [];
 let numFramesPlayernotMoving = 0; // MS6
 let numFramesAfterCaughtTarget = 0; // MS6
 
+
+const AIplayerSize_online = 50;
+const AIplayer_online = {
+    color: 'rgba(0, 128, 0, 0.5)',//'rgba(255, 0, 0, 0.5)', 
+    x: canvas.width/2 + 150, //center the x,y in the center of the player.
+    y: canvas.height/2 + 150,
+    moving:false,
+    targetX:0,
+    targetY:0,
+    velocity: 1.5,
+    angle:0,
+    speed: 1.5, 
+    width:50, 
+    height:50,
+    score:0
+};
+let AIcaughtTargets_online = [];
+let AIplayerLocation_online = [];
+let numFramesPlayernotMoving_AI_online = 0; // MS6
+let numFramesAfterCaughtTarget_AI_online = 0; // MS6
+
 //**************************************************** BLOCK RANDOMIZATION ******************************************************//
 
 async function initExperimentSettings() {
@@ -382,7 +618,7 @@ async function initExperimentSettings() {
     // Assign random condition (AI Adapt or AI Naive)
     // assignedCondition === 0 means that participant is in the AI Naive condition
     const aiBlockCondition = 'aiCondition'; // a string we use to represent the condition name
-    let numConditions = 4; // number of conditions
+    let numConditions = 6; // number of conditions
     let numDraws = 1; // number of draws
     let assignedCondition = await blockRandomization(db1, studyId, aiBlockCondition, numConditions, maxCompletionTimeMinutes, numDraws);
 
@@ -394,7 +630,7 @@ async function initExperimentSettings() {
     // let assignedSeed = await blockRandomization(db1, studyId, seedCondition, numConditions, maxCompletionTimeMinutes, numDraws);
 
     var randomValues = [];
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < 6; i++) {
         randomValues.push(generateRandomInt(1, 1000000));
     }
 
@@ -409,24 +645,19 @@ async function initExperimentSettings() {
 
 if (noAssignment){
 
-    // // await the asynchroneous function to complete and retrieve the curret
-    // if (DEBUG){ // adjust value as needed for debuggin default is the same as the main experiment
-    //     //await initExperimentSettings();
-    //     currentCondition = 4;
-    //     curSeeds = [12,123,12345,123456];
-    //     console.log('assignedCondition:', currentCondition); // Add this line
-    //     console.log('assignedSeed:', curSeeds); // Add this line
-    // } else {
-    //     await initExperimentSettings();
-    //     // console.log('assignedCondition:', currentCondition); // Add this line
-    //     // console.log('assignedSeed:', curSeeds); // Add this line
-    // }
-
-    currentCondition = 4;
-    curSeeds = [12,123,12345,123456];
-    console.log('assignedCondition:', currentCondition); // Add this line
-    console.log('assignedSeed:', curSeeds); // Add this line
-
+    // await the asynchroneous function to complete and retrieve the curret
+    if (DEBUG){ // adjust value as needed for debuggin default is the same as the main experiment
+        await initExperimentSettings();
+        curSeeds = [12,123,12345,123456, 1234566, 1234567];
+        // settings.maxTargets=100;
+        currentCondition = 1;
+        console.log('assignedCondition:', currentCondition); // Add this line
+        console.log('assignedSeed:', curSeeds); // Add this line
+    } else {
+        await initExperimentSettings();
+        // console.log('assignedCondition:', currentCondition); // Add this line
+        // console.log('assignedSeed:', curSeeds); // Add this line
+    }
     startGame(currentRound, currentCondition, currentBlock, curSeeds); // Start the next round
     noAssignment = false;
 }
@@ -434,15 +665,11 @@ if (noAssignment){
 let visitedBlocks = 0;
 let numSurveyCompleted = 0;
 
-let understandingCheckPassed = false;
-
-// ****************************************************** UPDATE FUNCTIONS ********************************************************//
+// ****************************************************** ASYNC UPDATE FUNCTIONS ********************************************************//
 
 // Start Game function
 async function startGame(round, condition, block, seeds) {
     currentRound = round; // Start at the specified round, or the current round
-
-    isLightOn = false;
 
     let blockSetting = difficultySettings[condition][block];
     roundSettings = blockSetting[currentRound];
@@ -450,25 +677,33 @@ async function startGame(round, condition, block, seeds) {
     // reassign default settings to the values grabbed from the current
     settings.AIMode = roundSettings.AIMode;
     settings.AIStabilityThreshold = roundSettings.AIStabilityThreshold;
+    settings.maxTargets = roundSettings.maxTargets;
+
+    // Debug setting for max targets
+    if (DEBUG) settings.maxTargets=5; // this was to get many targets for debuggin
    
     if (currentBlock == 0) {
         settings.randSeed = seeds[currentRound - 1];
     } else if (currentBlock == 1) {
         settings.randSeed = seeds[currentRound + 1];
+    } else if (currentBlock == 2){
+        settings.randSeed = seeds[currentRound + 3]
+       
     }
 
     if (DEBUG){
-        console.log("Default Settings AI Mode", settings.AIMode);
-        console.log("Block Settings Mode", roundSettings.AIMode);
+        //console.log("Default Settings AI Mode", settings.AIMode);
+        console.log("Current AI Mode", roundSettings.AIMode);
         console.log("Current Settings", roundSettings);
         console.log("Current Block", currentBlock);
         console.log("Current Round", currentRound);
+        console.log("Current Max Targets", settings.maxTargets);
+        console.log("Current Seeds: ", settings.randSeed);
     }
     // Initialize with a seed
     randomGenerator = lcg(settings.randSeed);
     randDRTinterval = Math.floor(randomGenerator() * 3 + 3) * fps; // random interval between 3 and 5 seconds
-
-    // console.log("start game settings", settings);
+    isLightOn = false;
 
     // Reset game canvas visibility
     const gameCanvas = document.getElementById('gameCanvas');
@@ -482,86 +717,102 @@ async function startGame(round, condition, block, seeds) {
         frameCountGame  = 0;
         isGameRunning   = true;
         gameLoop();
-        // console.log('Settings being passed into gameLoop', settings);
     }
 }
 
 // End Game function
-async function endGame(message) {
+async function endGame() {
     isGameRunning = false;
-    if (understandingCheckPassed){
-        await runGameSequence("Passed the Comprehension Check.");
-        // $("#comprehension-quiz-header").attr("hidden", true);
-        // $("#comprehension-quiz-main-content").attr("hidden", true);
 
-        // // $("#instructions-header").attr("hidden", false);
-        // // $("#instructions-main-content").attr("hidden", false);
-        // // Load Instructions
-        // // $('#instructions-main-content').load("html/instructions-AI.html");
-        // $('#comprehension-quiz-main-content').load('html/integrity-pledge.html');
-        // console.log("Moving on to the integrity pledge and then the full game");
+    writeGameDatabase();
 
-          // Hide Instructions
-          $("#instructions-header").attr("hidden", true);
-          $("#instructions-main-content").attr("hidden", true);
-          $("#instruction-task-interface").attr("hidden", true);
-          // Show Comprehension Quiz
-        //   $("#comprehension-quiz-header").attr("hidden", false);
-        //   $("#comprehension-quiz-main-content").attr("hidden", false);
-  
-          // Load Integrity Pledge
-          // $('#comprehension-quiz-main-content').load('html/instructions-gameplay-pg1.html');
-          $('#comprehension-quiz-main-content').load('html/integrity-pledge.html');
-    }
-    else{
-        await runGameSequence("Failed the Comprehension Check. Restarting the Game.");
-        resetGame();
-        startGame(1, currentCondition, 1, curSeeds);
+    if (currentRound < maxRounds && numSurveyCompleted < 3) {
+        currentRound++;
+        await runGameSequence("You've Completed a Round and earned " + score + " points. Click OK to continue.");
+        await resetGame();
+        startGame(currentRound, currentCondition, currentBlock, curSeeds); // Start the next round
+    } else if (currentRound >= maxRounds && numSurveyCompleted < 3) {
+
+        // All rounds in the current block are completed
+        blockInfo.completedBlock++;
+        blockInfo.completedBlockOrder.push(currentBlock);
+        console.log("Visited Blocks", visitedBlocks);
+        currentRound = 1; // Reset the round counter
+        currentBlock += 1; // Move to next block
+       
+        await runGameSequence("You've Completed a Block and earned " + score + " points. Click OK to continue.");
+        await resetGame();
+
+        if (settings.AIMode == 0) {
+            loadWorkLoadSurvey(); // no ai gets workload-only survey
+            $("#survey-workload-container").attr("hidden", false); // survey handles end-of-experiment logic
+            $("#full-game-container").attr("hidden", true); 
+            visitedBlocks++;
+
+        } else if (settings.AIMode == 1) {
+            loadFullSurvey();
+            $("#survey-full-container").attr("hidden", false);
+            $("#full-game-container").attr("hidden", true);
+            visitedBlocks++;
+        }
+    
+        if (visitedBlocks <= 2) {
+            startGame(currentRound, currentCondition,currentBlock,curSeeds); // Start the next round
+        }
     }
 }
 
 async function resetGame(){
-    objects         = null;
-    spawnData       = null;
-    caughtTargets   = null;
-    playerClicks    = null;
-    playerLocation  = null;
-    score           = null;
-    aiScore         = null;
-    player.score    = null;
-    AIplayer.score  = null
-    AIcaughtTargets = null;
-    AIplayerLocation = null;
+    objects                 = null;
+    spawnData               = null;
+    caughtTargets           = null;
+    playerClicks            = null;
+    playerLocation          = null;
+    score                   = null;
+    aiScore                 = null;
+    player.score            = null;
+    AIplayer.score          = null
+    AIcaughtTargets         = null;
+    AIplayerLocation        = null;
     aiClicks_adjusted       = null;
-    drtOnset  = null;
-    drtResponses    = null;
-    // aiClicks     = null; 
+    drtOnset                = null;
+    drtResponses            = null;
+    drtFalseAlarm           = null;
 
     // then reassign the variables
-    eventStream     = Array.from({ length: eventStreamSize }, () => ({}));// preallocate the array
-    objects         = []; // Reset the objects array
-    spawnData       = [];
-    caughtTargets   = [];
-    playerClicks    = [];
-    playerLocation  = [];
-    score           = 0;    
-    aiScore         = 0;
-    player.score    = 0;
-    AIplayer.score  = 0
+    eventStream             = [];//Array.from({ length: eventStreamSize }, () => ({}));// preallocate the array
+    AIeventStream           = [];
+    objects                 = []; // Reset the objects array
+    spawnData               = [];
+    caughtTargets           = [];
+    playerClicks            = [];
+    playerLocation          = [];
+    score                   = 0;    
+    aiScore                 = 0;
+    player.score            = 0;
+    AIplayer.score          = 0
     aiClicks_adjusted       = [];
-    drtOnset  = [];
-    drtResponses    = [];
-    //aiClicks     = [];
+    drtOnset                = [];
+    drtResponses            = [];
+    drtFalseAlarm           = [];
+    drtLightChoice          = 0;
 
-    AIcaughtTargets  = [];
-    AIplayerLocation = [];
+    falseAlarmFlag          = false;
+    missFlag                = false;
+    counter = 0; // counter on the DRT mistakes
+    drtCount = 0;
+
+    AIcaughtTargets         = [];
+    AIplayerLocation        = [];
     
     player.x        = canvas.width/2;
     player.y        = canvas.height/2;
     player.targetX  = canvas.width/2;
     player.targetY  = canvas.height/2;
-    AIplayer.x, AIplayer.y = canvas.width/2 - playerSize/2; // MS5: Reset the player position
+    AIplayer.x, AIplayer.y = canvas.width/2  + 150; // MS5: Reset the player position
 }
+
+// ****************************************************** ACTIVE UPDATE FUNCTIONS ********************************************************//
 
 function gameLoop(timestamp) {
     if (!isGameRunning) return;
@@ -576,17 +827,6 @@ function gameLoop(timestamp) {
         return;
     }
 
-    if (frameCountGame >= maxFrames && score < 30) {
-        understandingCheckPassed = false;
-        endGame();
-        // console.log("Game Over!", frameCountGame);
-        return;
-    } else if (score >= 30){
-        understandingCheckPassed = true;
-        endGame();
-        //return;
-    }
-
     elapsedTime = Date.now() - gameStartTime;
     roundTime = Date.now() - firstRender;
 
@@ -595,6 +835,7 @@ function gameLoop(timestamp) {
     
     // Calculate time since last update
     var deltaTime = timestamp - lastUpdateTime;
+
     // Check if it's time for the next update
     if (deltaTime >= updateInterval) {
         lastUpdateTime = timestamp - (deltaTime % updateInterval);
@@ -613,38 +854,6 @@ var lastUpdateTime = 0;
 var isLightOn    = false;
 
 // Render function
-// function render() {
-//     // console.log('Rendering frame');
-//     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-//     drawMask(ctx, player);
-//     // drawGrid();                                      // Draw grid
-//     ctx.save();
-//     drawWorldBoundary();    // Draw boundaries
-//     drawPlayer();
-//     if (settings.visualizeAIPlayer==1) { // MS5
-//         drawAIPlayer();
-//     }
-//     if (player.moving) drawArrowDirection();   // Draw arrow direction  }
-//    // displayAIstatus(); // display AI status -- ON or OFF
-//     // if (settings.experiment>1){
-//     //     // MS4: draw the path suggested by AI
-//     // }
-//     //drawAISolution();
-//     // drawFullAISolutionDEBUG(); // MS6: test function
-
-//     // drawTargetLocation();   // Draw target location
-//     // drawCursor(mouseX, mouseY); // Draw cursor
-//     drawObjects();          // Draw objects
-//     // drawLight(40, 40); // Top left corner
-//     // drawLight(canvas.width - 40, 40); // Top right corner
-//     // drawLight(40, canvas.height - 40); // Bottom left corner
-//     // drawLight(canvas.width - 40, canvas.height - 40); // Bottom right corner
-//     ctx.restore();
-//     drawScore();            // Draw score
-//     // console.log("Is scoreCanvas in the DOM?", $.contains(document, $("#scoreCanvas")[0]));
-// }
-
-// Render function
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
     // drawDRTMask(ctx);   
@@ -658,92 +867,77 @@ function render() {
     drawPlayer();                                     
     if (settings.visualizeAIPlayer==1) drawAIPlayer();
     if (player.moving) drawArrowDirection();          // Draw arrow to show player direction
-    displayAIstatus();                                // Display AI status -- ON or OFF
-    // drawAISolution();                                  // Draw AI solution of type specified in settings
+    // displayAIstatus();                                // Display AI status -- ON or OFF
+    drawAISolution();                                  // Draw AI solution of type specified in settings
     // drawFullAISolutionDEBUG();                     // Draw the full AI solution
     // drawTargetLocation();                             // Draw the X where the player is moving towards
-    drawObjects();
-    drawLight(drtLightChoice);      
-    
+    drawObjects();         
+
+    drawLight(drtLightChoice);
+    // if (drtLightChoice == 1) drawLight(50, 50);
+    // if (drtLightChoice == 2) drawLight(50, 750);
+    // if (drtLightChoice == 3) drawLight(750, 50);
+    // if (drtLightChoice == 4) drawLight(750, 750);
+    // drawLight(50, 50) 
+    // drawLight(50, 750) 
+    // drawLight(750, 50)
+    // drawLight(750, 750)
+
     ctx.restore();
     drawScore();                      
 }
 
 // Update game objects
 function updateObjects(settings) {
-    //console.log("Current Objects", objects);
     if (isPaused){
         // console.log("Game is paused");
         return;
     } 
     if (frameCountGame == 0) {
         // console.log("Starting Game");
-        runGameSequence("Please read the instructions carefully. Click to begin.");
+        runGameSequence("This is Round " + currentRound + " of " + maxRounds + " of this Section. Click to Begin.");
     }
     if (deltaFrameCount == 10){
         deltaFrameCount = 0;
     }
+    
+    // Engage DRT after some pseudo-random interval between 3 & 5 seconds
+    // if (DEBUG) console.log("DRT Interval", randDRTinterval);
+    
+    // if (drtCount == randDRTinterval){
+    //     // turn on light
+    //     isLightOn = true;
+    //     drtInitFrame = frameCountGame;
+    //     drtOnset.push(drtInitFrame);
 
-    if (deltaFrameCount == 0){
-        const index =  (frameCountGame)/10;
-        if (index >= 0){
-            let newEventObject      = {frame: frameCountGame, time: roundTime, player: {}, aiPlayer: {}, objects:{}, aiSuggestions: {}}; 
-            // append current game condition given the frame
-            // write player data
-            let curPlayerdata       = {x: player.x, y: player.y, targetX: player.targetX, targetY: player.targetY, advice: player.shownAdvice};
-            newEventObject.player   = JSON.parse(JSON.stringify(curPlayerdata));
-            // write ai data
-            // let curAIdata           = AIplayer;
-            let curAIdata           = {x: AIplayer.x, y: AIplayer.y, targetX: AIplayer.targetX, targetY: AIplayer.targetY, id: AIplayer.ID};
-            newEventObject.aiPlayer = JSON.parse(JSON.stringify(curAIdata));
-            // write all objects on screen
-            let curObjs             = objects.filter(obj => obj.active);
-            // go into each object and only grab variable data
-            newEventObject.objects  = JSON.parse(JSON.stringify(curObjs));
-            // console.log("Event Stream Index", index)
+    //     //reset the counter and random time
+    //     randDRTinterval = Math.floor(randomGenerator() * 3 + 3) * fps;
+    //     drtLightChoice = Math.floor(randomGenerator() * 4);
 
-            // MS7
-            let curSuggestion       = firstStep; 
-            if (firstStep != undefined){
-                curSuggestion = JSON.parse(JSON.stringify(curSuggestion));
-                newEventObject.aiSuggestions = curSuggestion;
-                //console.log("AI Suggestion", curSuggestion);
-            }
+    //     drtCount = 0;
+    // }
 
-            eventStream[index]      = newEventObject;
-        }
+    // // If the light has been on more than 2.5 seconds, then turn off the light and record an invalid trial.
+    // if (drtCount >= drtMissHigh && isLightOn){//(responseTime >=  drtMissHigh){
+    //     let response = {frame: frameCountGame, responseTime: null, initFrame: drtInitFrame, valid: false, location: drtLightChoice};
+    //     drtResponses.push(response);
+    //     isLightOn = false;
+    //     drtCount = 0;
+    //     missFlag = true;
+    // }
+
+    // Turn off the false alarm and/or miss flag after 90 frames --> triggers removal of warning caption
+    if (counter >= 90 && falseAlarmFlag){
+        falseAlarmFlag = false;
+    } else if (counter >= 90 && missFlag){
+        missFlag = false;
     }
     
-    // turn on the drt light after some time, 
-    console.log("DRT Interval", randDRTinterval);
-    if (drtCount == randDRTinterval){
-        // turn on light
-        isLightOn = true;
-        drtInitFrame = frameCountGame;
-        drtOnset.push(drtInitFrame);
-
-        //reset the counter and random time
-        randDRTinterval = Math.floor(randomGenerator() * 3 + 3) * fps;
-        drtLightChoice = Math.floor(randomGenerator() * 4);
-
-        drtCount = 0;
-    }
-
-   
-
-    // If the light has been on longer than 2.5 seconds, then turn off the light and record an invalid trial.
-    if (drtCount >= drtMissHigh && isLightOn){//(responseTime >=  drtMissHigh){
-        // let response = {frame: frameCountGame, responseTime: null, initFrame: drtInitFrame, valid: false};
-        // drtResponses.push(response);
-        isLightOn = false;
-        drtCount = 0;
-        endGame();
-    }
+    frameCountGame++;                           // MS: increment scene update count
+    deltaFrameCount++;                          // Limit the amount of data pushes
+    drtCount++;                                 // Increment the DRT interval counter   
+    if (missFlag || falseAlarmFlag) counter++;  // Increment the counter for the warning caption
     
-    frameCountGame++; // MS: increment scene update count
-    deltaFrameCount++; // limit the amount of data pushes
-    drtCount++; // increment the DRT interval counter   
-
     player.velocity = settings.playerSpeed;
  
     // Update player position if it is moving
@@ -761,8 +955,16 @@ function updateObjects(settings) {
             // Move player towards the target
             numFramesPlayernotMoving = 0; // MS6
             player.angle = Math.atan2(deltaY, deltaX);
-            player.x += player.velocity * Math.cos(player.angle);
-            player.y += player.velocity * Math.sin(player.angle);
+
+            // make global
+            let playerDeltaX = player.velocity * Math.cos(player.angle)
+            let playerDeltaY = player.velocity * Math.sin(player.angle)
+
+            player.dx = playerDeltaX;
+            player.dy = playerDeltaY;
+
+            player.x +=  player.dx;
+            player.y +=  player.dy;
 
             // console.log("Player Speed", player.velocity);
 
@@ -800,15 +1002,17 @@ function updateObjects(settings) {
     // MS: and inserted the following code
     if (frameCountGame % settings.spawnInterval === 0) {
         spawnObject(settings);    
-        
     }
 
     let toRemove = [];
     let caughtAnything = false; // MS6
     objects.forEach((obj, index) => {
         if (obj.active) {
-            obj.x += obj.vx * obj.speed; // Update x position
-            obj.y += obj.vy * obj.speed; // Update y position
+            // obj.x += obj.vx * obj.speed; // Update x position
+            // obj.y += obj.vy * obj.speed; // Update y position
+
+            obj.x += obj.dx; // Update x position with the magnitude vector
+            obj.y += obj.dy; // Update y position
             // console.log("Object Location", obj.x, obj.y);
 
             // Check if the object is outside the observable area
@@ -816,43 +1020,141 @@ function updateObjects(settings) {
             let dy                 = obj.y - center.y;
             let distanceFromCenter = Math.sqrt(dx * dx + dy * dy) - 10;
 
-            if (distanceFromCenter > observableRadius) {
+            let willOverlap = willSquareAndCircleOverlap(player.x, player.y, player.dx, player.dy, player.width,
+                obj.x, obj.y, obj.dx, obj.dy, obj.size);
+            
+            if (willOverlap){
+                obj.willOverlap = willOverlap;
+            } else {
+                obj.willOverlap = false;
+            }
+
+            // calculates if the player will collide with a target on it's current path
+            // console.log("Will overlap", willOverlap);
+
+            if (willOverlap) drawDebugOverlap(obj, willOverlap);
+
+            if (distanceFromCenter > observableRadius) { // Object leaves observable area (EXIT EVENT)
                 // console.log("Object is outside observable area");
                 obj.active = false; // Set the object to inactive
                 toRemove.push( index );
+
+                // create an event object here
+                let gameState = extractGameState(objects);
+
+                // add an event object for catching the target as a human player
+                // Values for writing to dataframe
+                let objectData      = {ID: obj.ID, value: obj.value,
+                                    x: obj.x, y: obj.y,
+                                    dx: obj.dx, dy: obj.dy,
+                                    vx: obj.vx, vy: obj.vy, speed: obj.speed,
+                                    clicked: obj.clicked, marked: obj.marked};
+
+                let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
+                                    dx: player.dx, dy: player.dy,
+                                    targetX: player.targetX, targetY: player.targetY,
+                                    angle: player.angle, moving: player.moving,
+                                    score:player.score, AIscore: AIplayer.score};
+
+                let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
+                                        intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
+                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice}; // consider adding more to this
+                let eventType       = 'exit';
+
+                // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
+                let eventObject     = {time: frameCountGame, eventType: eventType, 
+                                    objectData: objectData, playerData: playerData, 
+                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    gameState: gameState};
+
+                // if (DEBUG) console.log("Exit Event Object", eventObject);
+                eventStream.push(eventObject);
             }
             
-            if (!obj.intercepted && checkCollision(player, obj)) { // MS2: added a condition
+            // Player catches a new object
+            if (!obj.intercepted && checkCollision(player, obj)) {
                 // Collision detected
-                //obj.active = false; // MS2: commented out this line
-                //objects.splice(index, 1); // MS2: commented out this line
                 obj.intercepted   = true; // MS2: added this flag
-                score            += obj.value;
-                player.score     += obj.value;
+                caughtAnything    = true;    //MS6
+                score             += obj.value;
+                player.score      += obj.value;
 
-                 // MS7
-                //  console.log("Player Score: " +  score + " Average Score per frame " + ( score / frameCountGame) );
+                // ********************************** Human Caught Target Event **********************************//
+                let gameState = extractGameState(objects);
+                let objectData      = {ID: obj.ID, value: obj.value,
+                                    x: obj.x, y: obj.y,
+                                    dx: obj.dx, dy: obj.dy,
+                                    vx: obj.vx, vy: obj.vy, speed: obj.speed,
+                                    clicked: obj.clicked, marked: obj.marked};
 
-                let caughtObj     = {frame: frameCountGame, target: obj}
-                
-                // console.log("Collision detected!");
-                caughtTargets.push(caughtObj);
-                caughtAnything   = true; //MS6
+                let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
+                                    dx: player.dx, dy: player.dy,
+                                    targetX: player.targetX, targetY: player.targetY,
+                                    angle: player.angle, moving: player.moving,
+                                    score:player.score, AIscore: AIplayer.score};
+
+                let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
+                                        intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
+                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice};
+                let eventType       = 'catch';
+                let eventObject     = {time: frameCountGame, eventType: eventType, 
+                                    objectData: objectData, playerData: playerData, 
+                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    gameState: gameState};
+
+                // if (DEBUG) console.log("Caught Target Event Object", eventObject);
+
+                eventStream.push(eventObject)
+        
+                // // console.log("Collision detected!");
+                // caughtTargets.push(caughtObj);
+               
             }
 
+            // if AI player catches a new object
             if (!obj.AIintercepted && checkCollision(AIplayer, obj)) { // MS5: added a condition
                 // Collision detected
-                obj.AIintercepted = true; // MS2: added this flag             
+                obj.intercepted   = true; // Added this flag to make sure the object despawns after being caught  
+                // obj.AIintercepted = true; // MS2: added this flag             
                 //console.log("AI Collision detected!");
                 let caughtObj     = {frame: frameCountGame, target: obj}   
                 AIcaughtTargets.push(caughtObj);
 
                 aiScore           += obj.value;
                 AIplayer.score    += obj.value;
-                // console.log("AI Score: ", aiScore);
-                 // MS7
+                // if (DEBUG) console.log("AI Score: ", aiScore);
                 // console.log("AI Score: " +  aiScore + " Average Score per frame " + ( aiScore / frameCountGame).toFixed(4) + 
                 // "  Number of target changes: " + numAIChanges + "  Prob Change Target per Frame: " + (numAIChanges/frameCountGame).toFixed(6) );
+
+                // Make sure player stops if AI catches the target
+                if (obj.ID == player.targetObjID){
+                    player.moving = false;
+                }
+
+                // ********************************** AI Caught Target Event **********************************//
+                let gameState = extractGameState(objects);
+                let objectData      = {ID: obj.ID, value: obj.value,
+                                    x: obj.x, y: obj.y,
+                                    dx: obj.dx, dy: obj.dy,
+                                    vx: obj.vx, vy: obj.vy, speed: obj.speed,
+                                    clicked: obj.clicked, marked: obj.marked};
+
+                let AIplayerData      = {x: AIplayer.x, y: AIplayer.y, speed: AIplayer.velocity, 
+                                    targetX: AIplayer.targetX, targetY: AIplayer.targetY,
+                                    angle: AIplayer.angle, moving: AIplayer.moving,
+                                    score:AIplayer.score};
+
+                let interceptData   = {x: AIplayer.targetX, y: AIplayer.targetY, time: 0, distance: 0, intendedTarget: AIplayer.ID};
+                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                let eventType       = 'catch';
+                let eventObject     = {time: frameCountGame, eventType: eventType, 
+                                    objectData: objectData, playerData: AIplayerData, 
+                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    gameState: gameState};
+
+                // if (DEBUG) console.log("Caught Target Event Object", eventObject);
+
+                AIeventStream.push(eventObject)
             }
         }
         
@@ -889,15 +1191,82 @@ function updateObjects(settings) {
     // // MS7: Run the planner conditional on the human player
     // [ firstStep, bestSol, allSol ] = runAIPlanner( objects, player , observableRadius , center, 'human', settings.AIStabilityThreshold, bestSol, allSol, frameCountGame ); 
 
-    let prevBestSolOffline = bestSolOffline;
+    // **************************************** Run the AI Planner ****************************************//
+    
+    let prevBestSolOffline = bestSolOffline; // keep as is
+    let prevFirstStep = firstStepOffline;
+    // let prevSolID = -1;
+    // let prevSol;
+    // if (bestSolOffline != null) {
+    //     let prevSolID = bestSolOffline.firstStepID;
+    //     prevSol = bestSolOffline;
+    // }
+    // if (DEBUG) console.log("previously first step", prevFirstStep);
+
+    // remove the marked object from the AI player object set
+    // let objectsRemoved = objects.filter(obj => obj.ID !== player.intendedTarget);
+
+    let objectsAI;
+
+    // if (settings.AICollab == 1) objectsAI = objects.filter(obj => !obj.willOverlap);
+    // if (settings.AICollab == 0) objectsAI = objects;
+
+
     // MS8
-    [ firstStepOffline, bestSolOffline, allSolOffline ] = runAIPlanner( objects, AIplayer , observableRadius , center, 'AI', 
-        settings.AIStabilityThreshold, prevBestSolOffline, allSolOffline, frameCountGame, settings.alpha );
+    // [ firstStepOffline, bestSolOffline, allSolOffline ] = runAIPlanner(objectsAI, AIplayer , observableRadius , center, 'AI', 
+    //     settings.AIStabilityThreshold, prevBestSolOffline, allSolOffline, frameCountGame, settings.alpha );
+
+    // original code
+    [ firstStepOffline, bestSolOffline, allSolOffline ] = runAIPlanner(objects, AIplayer , observableRadius , center, 'AI', 
+    settings.AIStabilityThreshold, prevBestSolOffline, allSolOffline, frameCountGame, settings.alpha );
+
     
     // AI intention for click,target pair
+   
     AIplayer.targetX = firstStepOffline.x; // MS7 -- just save the firstStepOffline object to firebase
     AIplayer.targetY = firstStepOffline.y; 
     AIplayer.ID      = firstStepOffline.ID; // MS8 // ID of the object to intercept
+    // AIplayer.ID      = bestSolOffline.interceptionOrder[0]; // MS8 // ID of the object to intercept
+    // AIplayer.ID      = bestSolOffline.firstStepID;
+
+    // if the plan is stable and the first target has already been caught, then AI should move to the next target in the sequence
+    // let checkSolStability;
+    // if ((bestSolOffline != null) && (prevSol != null)) checkSolStability = arraysAreIdentical(bestSolOffline.interceptionOrder, prevSol.interceptionOrder);
+    // if (checkSolStability){
+    //     // if the plan is unchaning, then
+    //     console.log("Plans are identical");
+    // }
+
+
+    if ((prevFirstStep != null) && (AIplayer.ID != prevFirstStep.ID ) && DEBUG){
+        console.log("Best Solution Object:", bestSolOffline);
+        console.log("AI ID", AIplayer.ID); 
+        console.log("First Step ID", bestSolOffline.firstStepID);
+        console.log("Interception Order", bestSolOffline.interceptionOrder);
+        // alert("AI target is new! The ID is " + AIplayer.ID + " and the previous ID was " + prevFirstStep.ID);
+        // alert("AI is currently Headed to " + AIplayer.targetX + " " + AIplayer.targetY + " and the previous target was " + prevFirstStep.x + " " + prevFirstStep.y);
+        // alert("Best solution offline is " + bestSolOffline.ID + " and the previous best solution was " + prevBestSolOffline.ID);
+    }
+
+    // AI Player -- mark the object
+    if ((prevFirstStep!= null) && (prevFirstStep.ID != AIplayer.ID)){
+        // to mark an object that the is valid for the AI
+        objects.forEach((obj) => {
+            if (obj.ID == AIplayer.ID){
+                obj.AImarked = true;
+                
+            } else if (obj.ID == prevFirstStep.ID){
+                obj.AImarked = false;
+            }
+        });
+
+        // to unmark the object that was previously marked from the general object set
+        // objects.forEach((obj) => {
+        //     if (obj.ID == prevFirstStep.ID && obj.AImarked){
+        //         obj.AImarked = false;
+        //     }
+        // });
+    }
     
     if ((prevBestSolOffline != null) && (bestSolOffline.ID != prevBestSolOffline.ID)) {
         // push AI intention array
@@ -954,8 +1323,7 @@ function spawnObject(settings){
     let numObjectsTotal = objects.length; // MS2: count total number of objects (intercepted objects also count)
     
     let randomThreshold = randomGenerator();
-    if (randomThreshold < settings.spawnProbability && numObjectsTotal < settings.maxTargets) { // MS2: added this condition
-        // console.log("Spawn Threshold Met");
+    if (randomThreshold < settings.spawnProbability && numObjectsTotal < settings.maxTargets) { // Spawn a new object
         let newObject = createComposite(settings);
         
         // MS: Generate a random angle between 0 and 2π (0 and 360 degrees)
@@ -965,6 +1333,7 @@ function spawnObject(settings){
         // get x,y coordinates
         let curXLoc = center.x + observableRadius * Math.cos(angle); // - obj.width / 2;
         let curYLoc = center.y + observableRadius * Math.sin(angle); // - obj.height / 2;
+
         let location = {x:curXLoc, y:curYLoc, angle:angle, lastSpawnTime:0};
 
         // works good enough for now
@@ -972,12 +1341,60 @@ function spawnObject(settings){
         newObject.y = location.y ;
         newObject.spawnX = location.x;
         newObject.spawnY = location.y;
-        setVelocityTowardsObservableArea(newObject);
+
+        // ************************* Set Velocity Towards Observalbe Area ******************** //  
+        // setVelocityTowardsObservableArea(newObject);
+        // Calculate angle towards the center
+        let angleToCenter = Math.atan2(center.y - newObject.y, center.x - newObject.x);
+
+        // Define the cone's range (22.5 degrees in radians)
+        let coneAngle = 90 * (Math.PI / 180); // Convert degrees to radians
+
+        // Randomly choose an angle within the cone
+        //let randomAngleWithinCone = angleToCenter - coneAngle / 2 + Math.random() * coneAngle;
+        let randomAngleWithinCone = angleToCenter - coneAngle / 2 + randomGenerator()  * coneAngle;
+
+        // Set velocity based on the angle within the cone
+        newObject.vx = Math.cos(randomAngleWithinCone);
+        newObject.vy = Math.sin(randomAngleWithinCone);
+
+        newObject.dx = newObject.vx * newObject.speed;
+        newObject.dy = newObject.vy * newObject.speed;
+
+        // ************************* Push Newly Set Object Into the Game ******************** //  
 
         // push to objects array in order to render and update
         objects.push(newObject);
-        //console.log("New Object Spawned", newObject);
-        spawnData.push(newObject)
+        spawnData.push(newObject);
+        // place event object here
+
+        // ************************* Event Object for Spawning ******************** //   
+        let gameState = extractGameState(objects);
+        let objectData      = {ID: newObject.ID, value: newObject.value,
+                            x: newObject.x, y: newObject.y,
+                            dx: newObject.dx, dy: newObject.dy,
+                            vx: newObject.vx, vy: newObject.vy, speed: newObject.speed,
+                            clicked: newObject.clicked, marked: newObject.marked};
+
+        let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
+                            dx: player.dx, dy: player.dy,
+                            targetX: player.targetX, targetY: player.targetY,
+                            angle: player.angle, moving: player.moving,
+                            score:player.score, AIscore: AIplayer.score};
+
+        let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
+                                intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
+        let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+        let eventType       = 'spawn';
+
+        let eventObject     = {time: frameCountGame, eventType: eventType, 
+                            objectData: objectData, playerData: playerData, 
+                            interceptData: interceptData, drtStatus: drtStatus,
+                            gameState: gameState};
+
+        // if (DEBUG) console.log("Spawn Event Object", eventObject);
+
+        eventStream.push(eventObject)
 
     }
     location.lastSpawnTime = elapsedTime;
@@ -1000,17 +1417,35 @@ function createComposite(settings) {
     var range = valueHigh - valueLow;
     
     //let u = Math.random() * range + valueLow;
-    let u = randomGenerator() * range + valueLow;
+    // let u = randomGenerator() * range + valueLow;
+
+    // let u1 = randomGenerator();
+    // let u2 = randomGenerator();
+
+    // // Convert to Beta(1, 2) using the transformation technique
+    // let fillRadius = u1 / (u1 + Math.pow(u2, 1 / 2))  * shapeSize;
+
+    let probabilities   = binProbabilities(a, b, bins);
+    let cumulative      = cumulativeProbabilities(probabilities);
+    let fillRadius      = parseInt(sampleFromDistribution(cumulative, 1));
+
+    // let fillRadius = values[valueCounter];
+    // valueCounter++;
+    if (DEBUG){
+        console.log("Value Sampled", fillRadius);
+        console.log("Data Type of Value", typeof fillRadius);
+        // console.log("Sampled Value base datatype", typeof fillRadius);
+        // console.log("Sampled Value changed dtype", typeof parseInt(fillRadius));
+    } 
 
     // Eta controls the skewness of the value distribution
-    let eta = settings.valueSkew || 1; // Default to 1 if not provided
+    // let eta = settings.valueSkew || 1; // Default to 1 if not provided
     // Apply the non-linear transformation
-    let fillRadius = Math.pow(u, eta) * shapeSize;
+    // let fillRadius = Math.pow(u, eta) * shapeSize;
 
-     // sample from a distribution of speeds
-     let speedRange = settings.speedHigh - settings.speedLow
-     //let speedSample = Math.random() * speedRange + settings.speedLow;
-     let speedSample = randomGenerator()  * speedRange + settings.speedLow;
+    // sample from a distribution of speeds
+    let speedRange = settings.speedHigh - settings.speedLow
+    let speedSample = randomGenerator()  * speedRange + settings.speedLow;
 
     let newObj = {
         ID: frameCountGame ,
@@ -1018,11 +1453,13 @@ function createComposite(settings) {
         speed: speedSample, //(),
         x: 0,
         y: 0,
-        vx: 0, // initial velocity is zero -->
+        vx: 0, // unit vector not yet scaled by speed
         vy: 0,
+        dx: 0, // vector scaled by speed
+        dy: 0,
         velAngle: 0, // initial velocity angle is zero --> reset in the setVelocityTowardsObservableArea
         size: shapeSize,
-        outerColor:'blue', //'rgb(170,0,255)',
+        outerColor: 'rgba(0, 0, 255, 0.5)', //'rgb(170,0,255)',
         innerColor:  'orange', //'rgb(255,170,0)',
         shape: shapeType, // Add shape type here
         type: 'target',
@@ -1033,11 +1470,30 @@ function createComposite(settings) {
         intercepted: false, // MS2: Added this flag
         AIintercepted: false, // MS5: Added this flag
         spawnX: 0,
-        spawnY: 0
+        spawnY: 0,
+        clicked: false,
+        marked: false,
+        AImarked: false,
+        willOverlap: false,
     };
     // console.log(newObj.speed);
-
+ 
     return newObj;
+}
+
+function spawnUnderstandingCheckObjects() {
+    for (let i = 0; i < 3; i++) {
+        let obj = createComposite(settings);
+        obj.fill = 0;
+
+        let angle = randomGenerator() * 2 * Math.PI;
+        // Position the object on the rim of the camera
+        obj.x = center.x + randomGenerator()* observableRadius * Math.cos(angle);
+        obj.y = center.y + randomGenerator() * observableRadius * Math.sin(angle);
+        
+
+        objects.push(obj);
+    }
 }
 
 function setVelocityTowardsObservableArea(obj) {
@@ -1054,6 +1510,9 @@ function setVelocityTowardsObservableArea(obj) {
     // Set velocity based on the angle within the cone
     obj.vx = Math.cos(randomAngleWithinCone);
     obj.vy = Math.sin(randomAngleWithinCone);
+
+    obj.dx = obj.vx * obj.speed;
+    obj.dy = obj.vy * obj.speed;
     // console.log(`Initial Velocity for object: vx = ${obj.vx}, vy = ${obj.vy}`);
 }
 
@@ -1128,6 +1587,101 @@ function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
 }
 
+// Grabs all relevant current game state modeling data
+function extractGameState(objects){
+    return objects.map(obj => ({
+        id: obj.ID,
+        x: obj.x,
+        y: obj.y,
+        vx: obj.vx,
+        vy: obj.vy,
+        dx: obj.dx,
+        dy: obj.dy,
+        // magnitude of hte vecto
+        speed: obj.speed,
+        clicked: obj.clicked,
+        marked:obj.marked,
+        value: obj.value
+    }));
+}
+
+//***************************************************** BETA SAMPLING ****************************************************//
+function gamma(z) {
+    const g = 7;
+    const C = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+               771.32342877765313, -176.61502916214059, 12.507343278686905,
+               -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+    z -= 1;
+    let x = C[0];
+    for (let i = 1; i < g + 2; i++)
+        x += C[i] / (z + i);
+    let t = z + g + 0.5;
+    return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+}
+// Beta function using the Gamma function
+function beta(alpha, beta) {
+    return gamma(alpha) * gamma(beta) / gamma(alpha + beta);
+}
+// Beta distribution PDF
+function betaPDF(x, a, background) {
+    if (x < 0 || x > 1) return 0;
+    return (Math.pow(x, a - 1) * Math.pow(1 - x, b - 1)) / beta(a, b);
+}
+// Function to calculate the probability of each bin
+function binProbabilities(alpha, beta, bins) {
+    let step = 1 / bins;
+    let probabilities = [];
+    for (let i = 0; i < bins; i++) {
+        let lower = i * step;
+        let upper = (i + 1) * step;
+        probabilities.push(integrate(betaPDF, lower, upper, alpha, beta, 1000));
+    }
+    return probabilities;
+}
+// Numerical integration using the trapezoidal rule
+function integrate(func, start, end, alpha, beta, numSteps) {
+    let total = 0;
+    let step = (end - start) / numSteps;
+    for (let i = 0; i < numSteps; i++) {
+        let x0 = start + i * step;
+        let x1 = start + (i + 1) * step;
+        total += 0.5 * (func(x0, alpha, beta) + func(x1, alpha, beta)) * step;
+    }
+    return total;
+}
+
+// Continuing from the previous functions...
+
+// Function to calculate cumulative probabilities
+function cumulativeProbabilities(probabilities) {
+    let cumulative = [];
+    let sum = 0;
+    for (let prob of probabilities) {
+        sum += prob;
+        cumulative.push(sum);
+    }
+    return cumulative;
+}
+
+// Function to sample from the distribution
+function sampleFromDistribution(cumulative, totalSamples = 1) {
+    let samples = [];
+    for (let i = 0; i < totalSamples; i++) {
+        let random = randomGenerator();  // generate a random number between 0 and 1
+        let index = cumulative.findIndex(cum => cum >= random);
+        samples.push(index);
+    }
+    return samples;
+}
+let a = 1;
+let b = 2;
+let bins = 16;
+
+// let probabilities = binProbabilities(a, b, bins);
+// let cumulative = cumulativeProbabilities(probabilities);
+// let values = sampleFromDistribution(cumulative, 100000);
+let valueCounter = 0;
 //*************************************************** DRAWING FUNCTIONS **************************************************//
 
 function setupCanvas() {
@@ -1163,6 +1717,10 @@ function drawAIPlayer() {
     ctx.fillStyle = AIplayer.color;
     //ctx.strokeStyle = player.color;
     ctx.fillRect(topLeftX, topLeftY, player.width, player.height);
+
+    // write the current intended target id ot hte top left of hte palyer
+    ctx.fillStyle = 'black';
+    ctx.fillText(AIplayer.ID, topLeftX, topLeftY - 5);  
 }
 
 // Function to draw objects
@@ -1170,8 +1728,9 @@ function drawObjects() {
     objects.forEach(obj => {
         if (obj.active) {
             if (!obj.intercepted) drawCompositeShape(obj); // MS2: added this condition
+            // if (!obj.AIintercepted) drawCompositeShape(obj); // MS5: added this condition
             // MS5: added this; can be removed once code is tested
-            if ((obj.AIintercepted) && (settings.visualizeAIPlayer==1)) drawCompositeShapeAI(obj); 
+            // if ((obj.AIintercepted) && (settings.visualizeAIPlayer==1)) drawCompositeShapeAI(obj);//drawCompositeShapeAI(obj); 
             // if (obj.intercepted) drawCompositeShapeDEBUG(obj); // MS2: added this; can be removed once code is tested
             // //drawDebugBounds(obj);
         }
@@ -1196,15 +1755,53 @@ function drawCompositeShapeAI(obj) {
     drawCircle(obj.x, obj.y, obj.fill, 'gray' ); // Inner circle, smaller radius
 }
 
+// function drawCompositeShapeAI(obj) {
+//      // If the object is clicked, draw a green highlight around it.
+//     //  if (obj.marked && !player.toCenter){
+//     //     let ringColor = 'red';//  'rgb(76, 187, 23)';
+//     //     let ringRadius = obj.size + 5;
+//     //     drawCircle(obj.x, obj.y,ringRadius, ringColor); 
+//     //     // drawTargetMarker(obj.x, obj.y, obj.size + 5, 5, 10);
+//     // } 
+
+//     // Draw the outer circle first
+//     drawCircle(obj.x, obj.y, obj.size, obj.outerColor); // Outer circle
+
+//     // Then draw the inner circle on top
+//     drawCircle(obj.x, obj.y, obj.fill, obj.innerColor); // Inner circle, smaller radius
+// }
+
 function drawCompositeShape(obj) {
 
-    // If the object is clicked, draw a green highlight around it.
-    if (obj.marked && !player.toCenter){
-        let ringColor = 'red';//  'rgb(76, 187, 23)';
+    // If both the AI and the Player marked the same object in the naive condition
+    if (obj.marked && obj.AImarked){
+        let AIringColor = AIplayer.color;//  'rgb(76, 187, 23)';
+        let playerRingColor = player.color;
+        let AIringRadius = obj.size + 5;
+        let playerRingRadius = obj.size + 10;
+        drawRing(obj.x, obj.y,AIringRadius, AIringColor, 'dashed');
+        drawRing(obj.x, obj.y,playerRingRadius, playerRingColor);
+    }
+
+    // If the player marked the object
+    if (obj.marked && !player.toCenter && !obj.AImarked){
+        let ringColor = player.color;//  'rgb(76, 187, 23)';
         let ringRadius = obj.size + 5;
         drawCircle(obj.x, obj.y,ringRadius, ringColor); 
         // drawTargetMarker(obj.x, obj.y, obj.size + 5, 5, 10);
     } 
+
+    // If the AI marked the object
+    if (obj.AImarked && !obj.marked){
+        let ringColor = AIplayer.color;//  'rgb(76, 187, 23)';
+        let ringRadius = obj.size + 5;
+        drawCircle(obj.x, obj.y,ringRadius, ringColor); 
+        // drawTargetMarker(obj.x, obj.y, obj.size + 5, 5, 10);
+    } 
+
+    if (DEBUG) drawDebugID(obj);
+
+    if (obj.willOverlap && DEBUG) drawDebugOverlap(obj, obj.willOverlap);
 
     // Draw the outer circle first
     drawCircle(obj.x, obj.y, obj.size, obj.outerColor); // Outer circle
@@ -1224,11 +1821,122 @@ function drawCircle(centerX, centerY, radius, color) {
     ctx.restore();
 }
 
+// Function to draw a filled circle
+function drawFilledCircle(centerX, centerY, radius, color) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+}
+
+// Function to draw a ring with optional line style
+function drawRing(x, y, radius, color, style = 'solid') {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    if (style === 'dashed') {
+        ctx.setLineDash([5, 5]);
+    } else {
+        ctx.setLineDash([]);
+    }
+    ctx.stroke();
+    ctx.closePath();
+}
+
 function drawCenterMarker(centerX=400, centerY=400, radius=10, color = "rgba(128, 128, 128, 0.5)"){
     if (player.toCenter) drawCircle(centerX, centerY, 
                                     radius + 5,'red');
+
+    if (AIplayer.ID == -1) drawCircle(centerX, centerY, radius + 5, 'green');
     drawCircle(centerX, centerY, radius, color);
 }
+
+function drawTargetMarker(centerX, centerY, radius, triangleHeight =  5, triangleBase = 10) {
+    const angles = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]; // angles for the 4 triangles
+
+    ctx.save();
+    ctx.fillStyle = 'red';
+
+    angles.forEach((angle) => {
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        // Draw a triangle
+        ctx.beginPath();
+        ctx.moveTo(x, y - triangleHeight / 2);
+        ctx.lineTo(x + triangleBase / 2, y + triangleHeight / 2);
+        ctx.lineTo(x - triangleBase / 2, y + triangleHeight / 2);
+        ctx.closePath();
+        ctx.fill();
+    });
+
+    ctx.restore();
+}
+
+function drawDebugOverlap(obj, willOverlap) {
+    ctx.save();
+    // console.log("will overlap", willOverlap);
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)'; // Set the color of the box
+    ctx.lineWidth = 2; // Set the width of the box border
+    let size = 2*obj.size + 15;
+    ctx.strokeRect(obj.x - size/2, obj.y - size/2, size, size);
+    ctx.restore();
+}
+
+function drawDebugID(obj) {
+     // set the text color
+     ctx.fillStyle = 'black';
+     // set the font
+     ctx.font = '16px Arial';
+     // draw the ID above the object
+     ctx.fillText(obj.ID, obj.x, obj.y - 20);
+}
+
+function arraysAreIdentical(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] !== arr2[i]) return false;
+    }
+    return true;
+}
+
+// function drawTargetMarker(centerX, centerY, radius, triangleHeight = 10, triangleBase = 20) {
+//     const angles = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2]; // angles for the 4 triangles
+
+//     ctx.save();
+//     ctx.fillStyle = 'red';
+
+//     angles.forEach((angle) => {
+//         const x = centerX + radius * Math.cos(angle);
+//         const y = centerY + radius * Math.sin(angle);
+
+//         // Draw a triangle
+//         ctx.beginPath();
+//         ctx.moveTo(x - triangleBase / 2 * Math.cos(angle), y - triangleBase / 2 * Math.sin(angle));
+//         ctx.lineTo(x + triangleHeight * Math.cos(angle + Math.PI / 2), y + triangleHeight * Math.sin(angle + Math.PI / 2));
+//         ctx.lineTo(x + triangleBase / 2 * Math.cos(angle), y + triangleBase / 2 * Math.sin(angle));
+//         ctx.closePath();
+//         ctx.fill();
+//     });
+
+//     ctx.restore();
+// }
+
+// Function that draws one thick ring in around the center of the game
+
+// function drawRing(centerX=400, centerY=400, radius=200, thickness=120){
+//     ctx.save();
+//     ctx.beginPath();
+//     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+//     ctx.lineWidth = thickness;
+//     ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+//     ctx.stroke();
+//     ctx.restore();
+// }  
 
 function drawVelocityVector(obj) {
     if (isWithinCanvas(obj)) {
@@ -1271,6 +1979,7 @@ function drawScore() {
     scoreCtx.font = '16px Roboto';
     scoreCtx.fillStyle = 'black'; // Choose a color that will show on your canvas
     scoreCtx.fillText('Score: ' + score, 10, 20); // Adjust the positioning as needed
+    scoreCtx.fillText('AI Score: ' + AIplayer.score, 10, 40); // Adjust the positioning as needed
 }
 
 function drawCursor(x, y) {
@@ -1282,7 +1991,6 @@ function drawCursor(x, y) {
     ctx.restore(); // Restore state
 }
 
-// drawing outer mask
 // drawing outer mask
 function drawMask(ctx) {
     if (!ctx) {
@@ -1307,7 +2015,7 @@ function drawMask(ctx) {
     ctx.arc(centerX, centerY, maskRadius, 0, Math.PI * 2, false);
     ctx.fill();
 
-    // // Draw a slightly smaller circle inside the cut-out area
+    // Draw a slightly smaller circle inside the cut-out area
     // ctx.globalCompositeOperation = 'source-over';
     // ctx.fillStyle = isLightOn ? 'rgb(255,128,237)' : 'rgba(0, 0, 0, 0)'; // This is transparent black
     // ctx.beginPath();
@@ -1699,49 +2407,6 @@ function displayAIstatus(){
     }
 }
 
-// function drawLight() {
-//     ctx.beginPath();
-//     ctx.arc(40, 40, 25, 0, Math.PI * 2, false);
-//     ctx.fillStyle = isLightOn ? 'rgb(238, 75, 43)': 'gray';
-//     ctx.fill();
-// }
-
-// function drawLight() {
-//     const size = 25;
-//     const numberOfSides = 5; // For a pentagon
-//     const Xcenter = 40;
-//     const Ycenter = 40;
-
-//     ctx.beginPath();
-//     ctx.moveTo (Xcenter +  size * Math.cos(0), Ycenter +  size *  Math.sin(0));          
-
-//     for (let side = 0; side <= numberOfSides; side++) {
-//         ctx.lineTo (Xcenter + size * Math.cos(side * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(side * 2 * Math.PI / numberOfSides));
-//     }
-
-//     ctx.fillStyle = isLightOn ? 'rgb(238, 75, 43)' : 'gray';
-//     ctx.fill();
-// }
-
-// function drawLight(Xcenter, Ycenter) {
-//     let somelatentfunction = 0;
-//     const size = 25;
-//     const numberOfSides = 5; // For a pentagon
-//     // const Xcenter = 40;
-//     // const Ycenter = 40;
-
-//     ctx.beginPath();
-//     ctx.moveTo (Xcenter +  size * Math.cos(0 - Math.PI / 2), Ycenter +  size *  Math.sin(0 - Math.PI / 2));          
-
-//     for (let side = 0; side <= numberOfSides; side++) {
-//         ctx.lineTo (Xcenter + size * Math.cos(side * 2 * Math.PI / numberOfSides - Math.PI / 2), Ycenter + size * Math.sin(side * 2 * Math.PI / numberOfSides - Math.PI / 2));
-//     }
-
-//     // ctx.fillStyle = isLightOn ? 'rgb(238, 75, 43)' : 'gray';
-//    // ctx.fillStyle = isLightOn ? 'rgb(245,39,137)' : 'gray';
-//     ctx.fillStyle = isLightOn ? 'rgb(170,255,0)' : 'gray';
-//     ctx.fill();
-// }
 function drawLight(randChoice) {
     const size = 25;
     const numberOfSides = 5; // For a pentagon
@@ -1772,7 +2437,6 @@ function drawLight(randChoice) {
     ctx.fillStyle = isLightOn ? 'rgb(255,128,237)' : 'rgba(0, 0, 0, 0)'; // This is transparent black
     ctx.fill();
 }
-// some random comment
 
 function showTargetMessage(isCaught) {
     var messageBox = document.getElementById('messageBox');
@@ -1787,7 +2451,7 @@ function showTargetMessage(isCaught) {
     }, 2000); // Hide the message after 2 seconds
 }
 
-//  CUSTOM ALERT MESSAGE IN ORDER TO PAUSE THE GAME AND DISPLAY TEXT
+// Custom alert message in order to pause the game and display text
 function showCustomAlert(message) {
     // document.getElementById('customAlertMessage').innerText = message;
     // document.getElementById('customAlert').style.display = 'flex';
@@ -1808,8 +2472,8 @@ function showCustomAlert(message) {
 function closeCustomAlert() {
     document.getElementById('customAlert').style.display = 'none';
 }
-// ********************************* NEW INTERCEPT FUNCTIONS ********************************* //
-
+// ***************************************** INTERCEPTION ALGO (NEW) ***************************************** //
+// Intercept Function for the Player
 function attemptInterceptLocal(playerPosX, playerPosY, playerSpeed, objectPosX, objectPosY, objectVelX, objectVelY, circleRadius) {
     let success = false;
     let travelTime = Infinity;
@@ -1869,6 +2533,324 @@ function attemptInterceptLocal(playerPosX, playerPosY, playerSpeed, objectPosX, 
     return [ success, travelTime, interceptPosX, interceptPosY, totalDistanceTraveled ];
 }
 
+function willSquareAndCircleOverlap(x1, y1, vx1, vy1, r1, x2, y2, vx2, vy2, r2) {
+    // Function to calculate the square's corners at time t
+    function getSquareCorners(x, y, r, t) {
+        const halfR = r / 2;
+        return [
+            { x: x + halfR, y: y + halfR },
+            { x: x + halfR, y: y - halfR },
+            { x: x - halfR, y: y + halfR },
+            { x: x - halfR, y: y - halfR }
+        ].map(corner => ({
+            x: corner.x + vx1 * t,
+            y: corner.y + vy1 * t
+        }));
+    }
+
+    // Function to calculate the circle's center at time t
+    function getCircleCenter(x, y, t) {
+        return {
+            x: x + vx2 * t,
+            y: y + vy2 * t
+        };
+    }
+
+    // Check overlap at time t
+    function checkOverlap(t) {
+
+        if (t > player.timeToIntercept) return false;
+
+        const circle = getCircleCenter(x2, y2, t);
+        const squareCorners = getSquareCorners(x1, y1, r1, t);
+
+        // Check distance to all corners
+        for (const corner of squareCorners) {
+            const dist = Math.sqrt((circle.x - corner.x) ** 2 + (circle.y - corner.y) ** 2);
+            if (dist <= r2) {
+                return true;
+            }
+        }
+
+        // Check distance to edges
+        const halfR = r1 / 2;
+        const squareEdges = [
+            { x: x1 - halfR, y: y1, vx: 0, vy: 1 },
+            { x: x1 + halfR, y: y1, vx: 0, vy: 1 },
+            { x: x1, y: y1 - halfR, vx: 1, vy: 0 },
+            { x: x1, y: y1 + halfR, vx: 1, vy: 0 }
+        ].map(edge => ({
+            x: edge.x + vx1 * t,
+            y: edge.y + vy1 * t,
+            vx: edge.vx,
+            vy: edge.vy
+        }));
+
+        
+
+        for (const edge of squareEdges) {
+            const t0 = ((circle.x - edge.x) * edge.vx + (circle.y - edge.y) * edge.vy) / (edge.vx * edge.vx + edge.vy * edge.vy);
+            const closestX = edge.x + t0 * edge.vx;
+            const closestY = edge.y + t0 * edge.vy;
+            const dist = Math.sqrt((circle.x - closestX) ** 2 + (circle.y - closestY) ** 2);
+            if (dist <= r2 && t0 >= -halfR && t0 <= halfR) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Solve quadratic equation to find potential times of overlap
+    const a = (vx1 - vx2) * (vx1 - vx2) + (vy1 - vy2) * (vy1 - vy2);
+    const b = 2 * ((x1 - x2) * (vx1 - vx2) + (y1 - y2) * (vy1 - vy2));
+    const c = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) - (r1 / 2 + r2) * (r1 / 2 + r2);
+
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) {
+        return false;
+    }
+
+    const t1 = (-b - Math.sqrt(discriminant)) / (2 * a);
+    const t2 = (-b + Math.sqrt(discriminant)) / (2 * a);
+
+    // add a check that if the player is going to stop before the overlap point, then return false
+
+    // Check if overlap occurs at any potential time points
+    return checkOverlap(t1) || checkOverlap(t2) || checkOverlap(0);
+}
+
+// *************************************************** EVENT LISTENERS *************************************************** //
+let lastClickedObj = null;
+$(document).ready( function(){
+   // Event listener for player click locations
+   canvas.addEventListener('click', function(event) {
+        // Get the position of the click relative to the canvas
+        // Check not first click so that initializing game doesn't leed to player movement
+        const rect   = canvas.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const clickY = event.clientY - rect.top;
+        // player.targetX = clickX;
+        // player.targetY = clickY;
+
+        // Calculate the angle from the player to the click position
+        const deltaX = clickX - (player.x + player.width / 2);
+        const deltaY = clickY - (player.y + player.height / 2);
+        player.angle = Math.atan2(deltaY, deltaX);
+
+        // console.log('Player clicked:', clickX, clickY);
+        let playerStartX = 0;
+        let playerStartY = 0;
+
+        let objectStartX = 0;
+        let objectStartY = 0;
+
+        let objectVelX = 0;
+        let objectVelY = 0;
+
+        let success, travelTime, interceptPosX, interceptPosY, totalDistanceTraveled = 0;
+
+        // Extract the game state for the click and then ush into the playerClicks dataframe
+        let gameSnapshot = extractGameState(objects);
+        if (DEBUG) console.log('gameSnapshot:', gameSnapshot);  
+
+        // check if player clicked on a target
+        for (let i = 0; i < objects.length; i++) {
+            if (isClickOnObject(objects[i], clickX, clickY)) {
+                // The click is on this object
+                objects[i].clicked = true;
+                objects[i].marked = true;
+
+                // unmark the previous target object
+                for (let j = 0; j < objects.length; j++) {
+                    if (i !== j) {
+                        objects[j].marked = false;
+                    }
+                }
+
+                playerStartX = ( player.x - center.x );
+                playerStartY = ( player.y - center.y );
+
+                objectStartX = ( objects[i].x - center.x );
+                objectStartY = ( objects[i].y - center.y );
+
+                objectVelX = objects[i].vx * objects[i].speed;
+                objectVelY = objects[i].vy * objects[i].speed;
+
+                // let willOverlap = willSquareAndCircleOverlap(player.x, player.y, player.dx, player.dy, player.width,
+                //     objects[i].x, objects[i].y, objectVelX, objectVelY, objects[i].size);
+
+                // console.log("Will overlap", willOverlap);
+                // highlight the object that will be overlapped. 
+
+                // let cur_radius = 390;
+                let circleRadius = 390;
+
+                [success, travelTime, interceptPosX, 
+                interceptPosY, totalDistanceTraveled] = attemptInterceptLocal(playerStartX,playerStartY, player.velocity, 
+                                                        objectStartX, objectStartY, objectVelX, objectVelY, circleRadius);
+
+                // Intercept the clicked object using the optimal intercept location
+                player.targetX = interceptPosX + center.x; //+ center.x;
+                player.targetY = interceptPosY + center.y; //+ center.y;
+                player.moving = true;
+                player.targetObjID = objects[i].ID;
+                player.timeToIntercept = travelTime;
+
+                // (Sanity Check) Only in the case that the object speed is beyond the player speed 
+                if (totalDistanceTraveled == Infinity){
+                    console.log('No interception possible');
+                    objects[i].innerColor = 'red'
+                }
+                
+                // Values for writing to dataframe
+                let objectData      = {ID: objects[i].ID, value: objects[i].value,
+                                    x: objects[i].x, y: objects[i].y,
+                                    dx: objects[i].dx, dy: objects[i].dy,
+                                    vx: objects[i].vx, vy: objects[i].vy, speed: objects[i].speed,
+                                    clicked: objects[i].clicked, marked: objects[i].marked};
+
+                let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
+                                    dx: player.dx, dy: player.dy,
+                                    targetX: player.targetX, targetY: player.targetY,
+                                    angle: player.angle, moving: player.moving,
+                                    score:player.score, AIscore: AIplayer.score};
+
+                let interceptData   = {x: interceptPosX, y: interceptPosY, time: travelTime, distance: totalDistanceTraveled,  
+                                        intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
+                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                let eventType       = 'clickObject';
+
+                // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
+                let eventObject     = {time: frameCountGame, eventType: eventType, 
+                                    objectData: objectData, playerData: playerData, 
+                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    gameState: gameSnapshot};
+
+                eventStream.push(eventObject)
+
+                if (DEBUG) console.log('Object Click eventObject:', eventObject);
+                
+                // removed the playerClicks dataframe
+
+                break;
+            }  
+            // if click is around the center, then allow movement there
+            if ( isClickOnCenter(clickX,clickY) ) {
+                player.targetX = 400;
+                player.targetY = 400;
+                player.moving = true;
+                player.toCenter = true;
+
+                let eventType       = 'clickObject';
+                // let objectData      = 0;
+
+                let objectData      = {ID:0, value:0,
+                                    x: center.x, y: center.y,
+                                    dx: 0, dy: 0,
+                                    vx: 0, vy: 0, speed: 0,
+                                    clicked: true, marked: true};
+
+                let playerData      = {x: player.x, y: player.y, speed: player.velocity, 
+                                    dx: player.dx, dy: player.dy,
+                                    targetX: player.targetX, targetY: player.targetY,
+                                    angle: player.angle, moving: player.moving,
+                                    score:player.score, AIscore: AIplayer.score};
+                let interceptData   = null;
+                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+
+                // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
+                let eventObject     = {time: frameCountGame, eventType: eventType, 
+                                    objectData: objectData, playerData: playerData, 
+                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    gameState: gameSnapshot};
+
+                eventStream.push(eventObject)
+
+                if (DEBUG) console.log('Center Click eventObject:', eventObject);
+
+            } else{
+                player.toCenter = false;
+            }
+        }
+
+        // If there is a click on an object --> mark it as such, have null case when person doesn't click on any object
+        // playerClicks.push({frame:frameCountGame, targetX:clickX, targetY:clickY, curX:player.x, 
+        //     curY:player.y, aiX:firstStep.x, aiY:firstStep.y, id:firstStep.ID});
+    });
+
+    window.closeCustomAlert = closeCustomAlert; // Add closeCustomAlert to the global scope
+});
+
+async function runGameSequence(message) {
+    isPaused = true;
+    await showCustomAlert(message);
+    isPaused = false;
+}
+
+window.addEventListener('keydown', function(event) {
+    if (event.code === 'Space' && isLightOn) {
+        isLightOn = false;
+
+        responseTime = frameCountGame - drtInitFrame;
+        
+        // console.log("DRT Response: " + deltaResponse);  
+        let response = {frame: frameCountGame, delta: responseTime, initFrame: drtInitFrame, valid: true};
+
+        if (DEBUG) console.log("DRT Response:", response);
+
+        if (responseTime < drtMissLow){
+            response.valid = false;
+        }
+
+        drtResponses.push(response);
+        
+    } else if(event.code === 'Space' && !isLightOn) {
+        if (DEBUG) console.log("False Alarm DRT Response: ");  
+
+        // counter to limit warning caption, set false alarm flag to trigger caption change
+        counter = 0;
+        falseAlarmFlag = true;
+
+        // push to the false alarm array the time of the flase alarm
+        let response = {frame: frameCountGame};
+        drtFalseAlarm.push(response);
+    }
+});
+
+// Toggle AI assistance function
+function toggleAIAssistance() {
+    aiAssistanceOn = !aiAssistanceOn; // Toggle the state
+    const robotImg = document.getElementById('aiAssistRobot');
+    const button = document.getElementById('toggleAIAssistance');
+
+    if (aiAssistanceOn) {
+        button.style.backgroundColor = 'green';
+        button.textContent = 'AI Assistance: ON';
+        robotImg.style.filter = 'drop-shadow(0 0 10px green)'; // Add green glow effect
+    } else {
+        button.style.backgroundColor = 'red';
+        button.textContent = 'AI Assistance: OFF';
+        robotImg.style.filter = 'none'; // Remove glow effect
+    }
+}
+
+// Function to handle canvas click
+function handleStartCanvasClick(event) {
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = event.clientX - rect.left;
+    const canvasY = event.clientY - rect.top;
+    if (isStartGameAreaClicked(canvasX, canvasY)) {
+        startGame();
+    }
+}
+
+// Function to check if the start game area is clicked
+function isStartGameAreaClicked(x, y) {
+    return x > canvas.width / 2 - 100 && x < canvas.width / 2 + 100 &&
+           y > canvas.height / 2 - 20 && y < canvas.height / 2 + 20;
+}
+
 // Helper function to determine if the click is on the object
 function isClickOnObject(obj, x, y) {
     // Calculate the center of the object
@@ -1889,155 +2871,6 @@ function isClickOnCenter(clickX,clickY){
     }
 }
 
-// *********************************EVENT LISTENERS********************************* //
-
-$(document).ready( function(){
-    // Event listener for player click locations
-    canvas.addEventListener('click', function(event) {
-         // Get the position of the click relative to the canvas
-         // Check not first click so that initializing game doesn't leed to player movement
-         const rect   = canvas.getBoundingClientRect();
-         const clickX = event.clientX - rect.left;
-         const clickY = event.clientY - rect.top;
-         // player.targetX = clickX;
-         // player.targetY = clickY;
- 
-         // Calculate the angle from the player to the click position
-         const deltaX = clickX - (player.x + player.width / 2);
-         const deltaY = clickY - (player.y + player.height / 2);
-         player.angle = Math.atan2(deltaY, deltaX);
- 
-         // check if player clicked on a target
-         for (let i = 0; i < objects.length; i++) {
-             if (isClickOnObject(objects[i], clickX, clickY)) {
-                 // The click is on this object
-                 objects[i].clicked = true;
-                 objects[i].marked = true;
- 
-                 // unmark the previous target object
-                 for (let j = 0; j < objects.length; j++) {
-                     if (i !== j) {
-                         objects[j].marked = false;
-                     }
-                 }
- 
-                 let success, travelTime, interceptPosX, interceptPosY, totalDistanceTraveled 
- 
-                 let playerStartX = ( player.x - center.x );
-                 let playerStartY = ( player.y - center.y );
- 
-                 let objectStartX = ( objects[i].x - center.x );
-                 let objectStartY = ( objects[i].y - center.y );
- 
-                 let objectVelX = objects[i].vx * objects[i].speed;
-                 let objectVelY = objects[i].vy * objects[i].speed;
- 
-                 // let cur_radius = 390;
-                 let circleRadius = 390;
- 
-                 [success, travelTime, interceptPosX, 
-                 interceptPosY, totalDistanceTraveled] = attemptInterceptLocal(playerStartX,playerStartY, player.velocity, objectStartX, objectStartY, objectVelX, objectVelY, circleRadius);
- 
- 
-                 // let interceptSol = calculateInterception(player.x, player.y,objects[i].x, objects[i].y, objects[i].vx, objects[i].vy);
- 
-                 // Intercept the clicked object using the optimal intercept location
-                 player.targetX = interceptPosX + center.x; //+ center.x;
-                 player.targetY = interceptPosY + center.y; //+ center.y;
-                 player.moving = true;
- 
-                 if (totalDistanceTraveled == Infinity){
-                     console.log('No interception possible');
-                     objects[i].innerColor = 'red'
- 
-                     // go to the despawn location
-                 }
- 
-                 break;
- 
-                 // player.targetX = interceptSolution.x; //+ center.x;
-                 // player.targetY = interceptSolution.y; //+ center.y;
-                 // player.moving = true;
- 
-             }  
-             // if click is around the center, then allow movement there
-             if ( isClickOnCenter(clickX,clickY) ) {
-                 player.targetX = 400;
-                 player.targetY = 400;
-                 player.moving = true;
-                 player.toCenter = true;
-             } else{
-                 player.toCenter = false;
-             }
-         }
-     });
- 
-     window.closeCustomAlert = closeCustomAlert; // Add closeCustomAlert to the global scope
-});
-
-async function runGameSequence(message) {
-    isPaused = true;
-    await showCustomAlert(message);
-    isPaused = false;
-}
-
-window.addEventListener('keydown', function(event) {
-    if (event.code === 'Space' && isLightOn) {
-        isLightOn = false;
-
-        responseTime = frameCountGame - drtInitFrame;
-        
-        // console.log("DRT Response: " + deltaResponse);  
-        let response = {frame: frameCountGame, delta: responseTime, initFrame: drtInitFrame, valid: true};
-        // console.log(response);
-
-        if (responseTime < drtMissLow){
-            response.valid = false;
-            endGame();
-        }
-        
-        if (DEBUG){
-            console.log("DRT Response:", response);
-        }
-        drtResponses.push(response);
-    }
-});
-
-// Toggle AI assistance function
-function toggleAIAssistance() {
-    aiAssistanceOn = !aiAssistanceOn; // Toggle the state
-    const robotImg = document.getElementById('aiAssistRobot');
-    const button = document.getElementById('toggleAIAssistance');
-
-    if (aiAssistanceOn) {
-        button.style.backgroundColor = 'green';
-        button.textContent = 'AI Assistance: ON';
-        robotImg.style.filter = 'drop-shadow(0 0 10px green)'; // Add green glow effect
-    } else {
-        button.style.backgroundColor = 'red';
-        button.textContent = 'AI Assistance: OFF';
-        robotImg.style.filter = 'none'; // Remove glow effect
-    }
-    
-    // Redraw the canvas to reflect the change in highlighting
-    //render();
-}
-
-// Function to handle canvas click
-function handleStartCanvasClick(event) {
-    const rect = canvas.getBoundingClientRect();
-    const canvasX = event.clientX - rect.left;
-    const canvasY = event.clientY - rect.top;
-    if (isStartGameAreaClicked(canvasX, canvasY)) {
-        startGame();
-    }
-}
-
-// Function to check if the start game area is clicked
-function isStartGameAreaClicked(x, y) {
-    return x > canvas.width / 2 - 100 && x < canvas.width / 2 + 100 &&
-           y > canvas.height / 2 - 20 && y < canvas.height / 2 + 20;
-}
 
 //************************************************** DATA COLLECTION *****************************************************//
   
@@ -2182,25 +3015,25 @@ function loadFullSurvey(){
 
             let feedbackText = grabFeedbackText();
             
-            if (numSurveyCompleted == 1 && currentCondition == 4) {
+            if (numSurveyCompleted == 1 && currentCondition == 2) {
                 let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/full1' ;
                 let path2 = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/aiFeedback1' ;
                 writeRealtimeDatabase(db1, path, TOPIC_FULL_DICT);
                 writeRealtimeDatabase(db1, path2, feedbackText);
                 
-            } else if (numSurveyCompleted == 2 && currentCondition == 4) {
+            } else if (numSurveyCompleted == 2 && currentCondition == 2) {
                 let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/full2' ;
                 let path2 = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/aiFeedback2' ;
                 writeRealtimeDatabase(db1, path, TOPIC_FULL_DICT);
                 writeRealtimeDatabase(db1, path2, feedbackText);
             } else {
-                let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/full' ;
+                let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/full3' ;
                 let path2 = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/aiFeedback' ;
                 writeRealtimeDatabase(db1, path, TOPIC_FULL_DICT);
                 writeRealtimeDatabase(db1, path2, feedbackText);
             }
 
-            if (numSurveyCompleted == 2) {
+            if (numSurveyCompleted == 3) {
                 // push them to the final page of the experiment which redirects participants
                 // await runGameSequence("Congratulations on Finishing the Main Experiment! Click OK to Continue to the Feedback Survey.");
                 // $("#full-game-container").attr("hidden", true);
@@ -2326,18 +3159,18 @@ function loadWorkLoadSurvey(){
 
             numSurveyCompleted++;
             
-            if (numSurveyCompleted == 1 && currentCondition == 1) {
+            if (numSurveyCompleted == 1) {
                 let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/workload1' ;
                 writeRealtimeDatabase(db1, path, TOPIC_Workload_DICT);
-            } else if (numSurveyCompleted == 2 && currentCondition == 1) {
+            } else if (numSurveyCompleted == 2) {
                 let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/workload2' ;
                 writeRealtimeDatabase(db1, path, TOPIC_Workload_DICT);
             } else {
-                let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/workload' ;
+                let path = studyId + '/participantData/' + firebaseUserId1 + '/selfAssessment/workload3' ;
                 writeRealtimeDatabase(db1, path, TOPIC_Workload_DICT);
             }
 
-            if (numSurveyCompleted == 2) {
+            if (numSurveyCompleted == 3) {
                 // push them to the final page of the experiment which redirects participants
                 // await runGameSequence("Congratulations on Finishing the Main Experiment! Click OK to Continue to the Feedback Survey.");
                 finalizeBlockRandomization(db1, studyId, currentCondition);
@@ -2476,3 +3309,4 @@ async function loadCompletePage(){
         $('#user-feedback-button').click(submitFeedback);
     });
 }
+
