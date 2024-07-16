@@ -65,9 +65,9 @@ var STATICOBJDEBUG = false; // Set to true to use static object locations for de
 let studyId = 'placeHolder';
 
 if (DEBUG){
-   studyId    = "uci-hri-experiment-singleplayer-2-debug";
+   studyId    = "uci-hri-experiment-singleplayer-3-debug";
 } else {
-    studyId   = "uci-hri-experiment-singleplayer-2";
+    studyId   = "uci-hri-experiment-singleplayer-3";
 }
 
 // WRITE PROLIFIC PARTICIPANT DATA TO DB1
@@ -834,13 +834,13 @@ function updateObjects(settings) {
 
                 let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
                                         intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice}; // consider adding more to this
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice}; // consider adding more to this
                 let eventType       = 'exit';
 
                 // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: playerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    interceptData: interceptData,
                                     gameState: gameState};
 
                 // if (DEBUG) console.log("Exit Event Object", eventObject);
@@ -871,11 +871,11 @@ function updateObjects(settings) {
 
                 let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
                                         intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice};
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location: drtLightChoice};
                 let eventType       = 'catch';
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: playerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    interceptData: interceptData, 
                                     gameState: gameState};
 
                 // if (DEBUG) console.log("Caught Target Event Object", eventObject);
@@ -921,11 +921,11 @@ function updateObjects(settings) {
                                     score:AIplayer.score};
 
                 let interceptData   = {x: AIplayer.targetX, y: AIplayer.targetY, time: 0, distance: 0, intendedTarget: AIplayer.ID};
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
                 let eventType       = 'catch';
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: AIplayerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    interceptData: interceptData, 
                                     gameState: gameState};
 
                 // if (DEBUG) console.log("Caught Target Event Object", eventObject);
@@ -964,9 +964,10 @@ function updateObjects(settings) {
     // AIplayer.targetX = firstStepOffline.x; // MS7 -- just save the firstStepOffline object to firebase
     // AIplayer.targetY = firstStepOffline.y; 
 
-    // // MS7: Run the planner conditional on the human player
+    // MS7: Run the planner conditional on the human player
     // [ firstStep, bestSol, allSol ] = runAIPlanner( objects, player , observableRadius , center, 'human', settings.AIStabilityThreshold, bestSol, allSol, frameCountGame ); 
 
+    if (DEBUG) console.log(firstStep.ID);
     // **************************************** Run the AI Planner ****************************************//
     
     let prevBestSolOffline = bestSolOffline;
@@ -1110,12 +1111,12 @@ function spawnObject(settings){
 
         let interceptData   = {x: player.targetX, y: player.targetY, time: 0, distance: 0, 
                                 intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
-        let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+        // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
         let eventType       = 'spawn';
 
         let eventObject     = {time: frameCountGame, eventType: eventType, 
                             objectData: objectData, playerData: playerData, 
-                            interceptData: interceptData, drtStatus: drtStatus,
+                            interceptData: interceptData, 
                             gameState: gameState};
 
         // if (DEBUG) console.log("Spawn Event Object", eventObject);
@@ -2501,13 +2502,13 @@ $(document).ready( function(){
 
                 let interceptData   = {x: interceptPosX, y: interceptPosY, time: travelTime, distance: totalDistanceTraveled,  
                                         intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
                 let eventType       = 'clickObject';
 
                 // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: playerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    interceptData: interceptData,
                                     gameState: gameSnapshot};
 
                 eventStream.push(eventObject)
@@ -2540,12 +2541,12 @@ $(document).ready( function(){
                                     angle: player.angle, moving: player.moving,
                                     score:player.score, AIscore: AIplayer.score};
                 let interceptData   = null;
-                let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
+                // let drtStatus       = {isOn: isLightOn, duration: drtCount, initFrame:drtInitFrame, location:drtLightChoice}; // consider adding more to this
 
                 // collapse the 4 object events (spawning, collision, clicking, exiting) into one 1 dataframe
                 let eventObject     = {time: frameCountGame, eventType: eventType, 
                                     objectData: objectData, playerData: playerData, 
-                                    interceptData: interceptData, drtStatus: drtStatus,
+                                    interceptData: interceptData, 
                                     gameState: gameSnapshot};
 
                 eventStream.push(eventObject)
