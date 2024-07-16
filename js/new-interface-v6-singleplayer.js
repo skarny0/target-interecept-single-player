@@ -2555,7 +2555,7 @@ $(document).ready( function(){
                                     targetX: player.targetX, targetY: player.targetY,
                                     angle: player.angle, moving: player.moving,
                                     score:player.score, AIscore: AIplayer.score,
-                                    playerDelay: numFramesPlayernotMoving, AIplayerDelay: planDelayFrames};
+                                    playerDelay: numFramesPlayernotMoving, emaDelay: planDelayFrames};
 
                 let interceptData   = {x: interceptPosX, y: interceptPosY, time: travelTime, distance: totalDistanceTraveled,  
                                         intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
