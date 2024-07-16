@@ -387,6 +387,17 @@ let AIplayerLocation = [];
 let numFramesPlayernotMoving = 0; // MS6
 let numFramesAfterCaughtTarget = 0; // MS6
 
+// ****** PLAN DELAY VARIABLES ****** //
+
+// Delay for the collaborative agent between plans
+let planDelayCounter = 0;
+let planDelay = false;
+let planDelayFrames = 10; // 0.3 seconds in frames
+
+let avgResponseTime;
+let clickTimes = [];
+
+
 //**************************************************** BLOCK RANDOMIZATION ******************************************************//
 
 async function initExperimentSettings() {
@@ -855,6 +866,8 @@ function updateObjects(settings) {
                 score             += obj.value;
                 player.score      += obj.value;
 
+                if (obj.ID == player.targetObjID) player.moving = false; // stop player if caught intended target
+
                 // ********************************** Human Caught Target Event **********************************//
                 let gameState = extractGameState(objects);
                 let objectData      = {ID: obj.ID, value: obj.value,
@@ -898,7 +911,7 @@ function updateObjects(settings) {
 
                 aiScore           += obj.value;
                 AIplayer.score    += obj.value;
-                // if (DEBUG) console.log("AI Score: ", aiScore);
+                if (DEBUG) console.log("AI Score: ", aiScore);
                 // console.log("AI Score: " +  aiScore + " Average Score per frame " + ( aiScore / frameCountGame).toFixed(4) + 
                 // "  Number of target changes: " + numAIChanges + "  Prob Change Target per Frame: " + (numAIChanges/frameCountGame).toFixed(6) );
 
@@ -967,7 +980,7 @@ function updateObjects(settings) {
     // MS7: Run the planner conditional on the human player
     // [ firstStep, bestSol, allSol ] = runAIPlanner( objects, player , observableRadius , center, 'human', settings.AIStabilityThreshold, bestSol, allSol, frameCountGame ); 
 
-    if (DEBUG) console.log(firstStep.ID);
+    // if (DEBUG) console.log(firstStep.ID);
     // **************************************** Run the AI Planner ****************************************//
     
     let prevBestSolOffline = bestSolOffline;
@@ -1327,6 +1340,11 @@ function extractGameState(objects){
 }
 
 //***************************************************** BETA SAMPLING ****************************************************//
+
+let a = 1;
+let b = 2;
+let bins = 16;
+
 function gamma(z) {
     const g = 7;
     const C = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,
@@ -1395,14 +1413,26 @@ function sampleFromDistribution(cumulative, totalSamples = 1) {
     }
     return samples;
 }
-let a = 1;
-let b = 2;
-let bins = 16;
 
-// let probabilities = binProbabilities(a, b, bins);
-// let cumulative = cumulativeProbabilities(probabilities);
-// let values = sampleFromDistribution(cumulative, 100000);
-let valueCounter = 0;
+
+
+// intial varaiables for movingaverage to delay clicks
+let ema;
+let period = 10;
+let smoothingFactor = 2 / (1 + period);
+
+function getExponentialMovingAverage(n) {
+    let lastNClicks = clickTimes.slice(Math.max(clickTimes.length - n, 0)); // Get the last n clicks
+    lastNClicks.forEach(currentDataPoint => {
+        if (ema === undefined) {
+            ema = currentDataPoint; // For the first data point, EMA equals the current data point
+        } else {
+            ema = (currentDataPoint - ema) * smoothingFactor + ema;
+        }
+    });
+    return ema;
+}
+
 //*************************************************** DRAWING FUNCTIONS **************************************************//
 
 function setupCanvas() {
@@ -2461,6 +2491,32 @@ $(document).ready( function(){
                 objectVelX = objects[i].vx * objects[i].speed;
                 objectVelY = objects[i].vy * objects[i].speed;
 
+                  // ********* CALCULATE THE DELAY IN PLANNING ********* //
+
+                // num frames it took to make a new target choice 
+                // if (player.targetObjID != null && player.targetObjID != objects[i].ID) { // add a delay variable when a new object is clicked
+                if (!player.moving){ // only clicks that happen when the player is not moving
+                    console.log("number delays", clickTimes.length);
+                    console.log("Number of Frames Player not Moving", numFramesPlayernotMoving)
+                    clickTimes.push(numFramesPlayernotMoving);
+                 
+                    let lastNumClicks = 5;  
+                    avgResponseTime = getExponentialMovingAverage(lastNumClicks);
+                    console.log("Average Response Time", avgResponseTime); 
+
+                    // if (!clickTimes.length < 1) {
+                    //     avgResponseTime = 10;
+                    // } else {
+                    //     let lastNumClicks = 5;  
+                    //     avgResponseTime = getExponentialMovingAverage(lastNumClicks);
+                    //     console.log("Average Response Time", avgResponseTime); 
+                    // }
+                }        
+
+                planDelayFrames = Math.floor(avgResponseTime);
+                // console.log("*** HALFWAY THROUGH THE GAME ***")
+                console.log("Plan Delay Frames", planDelayFrames)
+
                 // let willOverlap = willSquareAndCircleOverlap(player.x, player.y, player.dx, player.dy, player.width,
                 //     objects[i].x, objects[i].y, objectVelX, objectVelY, objects[i].size);
 
@@ -2498,7 +2554,8 @@ $(document).ready( function(){
                                     dx: player.dx, dy: player.dy,
                                     targetX: player.targetX, targetY: player.targetY,
                                     angle: player.angle, moving: player.moving,
-                                    score:player.score, AIscore: AIplayer.score};
+                                    score:player.score, AIscore: AIplayer.score,
+                                    playerDelay: numFramesPlayernotMoving, AIplayerDelay: planDelayFrames};
 
                 let interceptData   = {x: interceptPosX, y: interceptPosY, time: travelTime, distance: totalDistanceTraveled,  
                                         intendedTarget: player.targetObjID, AIintendedTarget: AIplayer.ID};
