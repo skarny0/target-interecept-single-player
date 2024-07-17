@@ -1337,6 +1337,7 @@ function extractGameState(objects){
         marked:obj.marked,
         value: obj.value,
         active: obj.active,
+        intercepted: obj.intercepted,
     }));
 }
 
