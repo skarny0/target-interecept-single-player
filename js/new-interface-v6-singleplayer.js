@@ -259,7 +259,7 @@ let drtLightChoice      = 0; // random choice of light to display
 
 let maxFrames = null;
 if (DEBUG){
-    maxFrames         = 10 * fps;// settings.maxSeconds * fps;
+    maxFrames         = 30 * fps;// settings.maxSeconds * fps;
 } else{ // set it to whatever you want
     maxFrames         = settings.maxSeconds * fps; //120 * 60; // Two minutes in frames
 }
@@ -1335,7 +1335,8 @@ function extractGameState(objects){
         speed: obj.speed,
         clicked: obj.clicked,
         marked:obj.marked,
-        value: obj.value
+        value: obj.value,
+        active: obj.active,
     }));
 }
 
